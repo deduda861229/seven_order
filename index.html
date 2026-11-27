@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>세븐 편의점 배달 주문</title>
+  <style>
+    :root {
+      --primary: #008061;
+      --primary-dark: #00664d;
+      --accent: #f37021;
+      --kakao: #fee500;
+      --kakao-text: #191919;
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --text: #1a1d20;
+      --subtext: #666d75;
+      --border: #e5e8eb;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 100px;
+    }
+
+    /* 상단 헤더 */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-badge {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 12px;
+      padding: 3px 7px;
+      border-radius: 6px;
+    }
+    .brand h1 {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+    }
+    .notice-bar {
+      background: #eef8f5;
+      color: #0b5d47;
+      font-size: 12.5px;
+      padding: 8px 16px;
+      line-height: 1.4;
+      border-top: 1px solid #d7efe8;
+    }
+
+    /* 검색창 */
+    .search-wrap {
+      padding: 10px 16px 6px;
+      background: #fff;
+    }
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      background: #f8f9fa;
+      outline: none;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+
+    /* 카테고리 탭 */
+    .tabs {
+      display: flex;
+      overflow-x: auto;
+      gap: 6px;
+      padding: 8px 16px 12px;
+      background: #fff;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      flex: 0 0 auto;
+      padding: 7px 13px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--subtext);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* 대분류 아코디언 */
+    .category-accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 14px 4px;
+      background: #fff;
+    }
+    .category-compact {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 5px 14px;
+      background: #f4f8f7;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+    .category-current-label {
+      color: var(--subtext);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .category-compact strong {
+      color: var(--primary-dark);
+      font-size: 14px;
+    }
+    .category-change-btn {
+      margin-left: auto;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: #fff;
+      color: var(--primary-dark);
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .category-head {
+      width: 100%;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: #fff;
+      color: var(--text);
+      text-align: left;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .category-head.active {
+      color: var(--primary-dark);
+      border-color: var(--primary);
+      background: #eef8f5;
+      border-radius: 11px 11px 0 0;
+    }
+    .category-head-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .category-count {
+      flex: 0 0 auto;
+      color: var(--primary);
+      background: #e8f5f1;
+      border-radius: 20px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .category-arrow { color: var(--subtext); font-size: 12px; }
+    .category-head.active .category-arrow { color: var(--primary); }
+    .category-content {
+      overflow: hidden;
+      border: 1px solid var(--primary);
+      border-top: 0;
+      border-radius: 0 0 11px 11px;
+      background: #f8fbfa;
+      padding: 4px 8px 8px;
+      animation: categoryOpen .18s ease-out;
+    }
+    @keyframes categoryOpen {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .category-empty {
+      padding: 18px 12px;
+      color: var(--subtext);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+
+    /* 소분류 아코디언 */
+    .subcategory-list { display:flex; flex-direction:column; gap:7px; }
+    .subcategory-block { border:1px solid var(--border); border-radius:10px; overflow:hidden; background:#fff; }
+    .subcategory-head {
+      width:100%; min-height:44px; display:flex; align-items:center; justify-content:space-between;
+      gap:8px; padding:10px 12px; border:0; background:#fff; color:var(--text);
+      text-align:left; font-size:13.5px; font-weight:800; cursor:pointer;
+    }
+    .subcategory-head.active { color:var(--primary-dark); background:#eef8f5; }
+    .subcategory-head-left { display:flex; align-items:center; gap:7px; min-width:0; flex-wrap:wrap; }
+    .subcategory-count { flex:0 0 auto; padding:2px 7px; border-radius:14px; background:#e8f5f1; color:var(--primary); font-size:10.5px; font-weight:800; }
+    .subcategory-arrow { flex:0 0 auto; color:var(--primary); font-size:11px; }
+    .subcategory-content { padding:7px 8px 3px; border-top:1px solid #d7efe8; background:#f8fbfa; }
+
+    /* 상품 리스트 */
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 12px 14px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 14px 4px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .item-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 13px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--border);
+    }
+    .item-card.selected {
+      border-color: var(--primary);
+      background: #f6fcfa;
+    }
+    .item-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .item-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: keep-all;
+    }
+    .hit-tag {
+      display: inline-block;
+      background: #fff0e6;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .item-note {
+      font-size: 12px;
+      color: var(--subtext);
+      margin-top: 3px;
+      line-height: 1.35;
+      word-break: keep-all;
+    }
+    .item-price {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: var(--text);
+      margin-top: 5px;
+    }
+    .item-price span {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--subtext);
+    }
+
+    /* 수량 버튼 */
+    .qty-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-btn.plus {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .qty-num {
+      min-width: 22px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    /* 하단 고정 장바구니 바 */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+      z-index: 150;
+    }
+    .bottom-inner {
+      max-width: 640px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .total-info .count {
+      font-size: 12px;
+      color: var(--subtext);
+    }
+    .total-info .sum {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+    .order-open-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 20px;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .order-open-btn:disabled {
+      background: #c5ccd3;
+      cursor: not-allowed;
+    }
+
+    /* 주문서 모달 */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #fff;
+      width: 100%;
+      max-width: 640px;
+      max-height: 90vh;
+      border-radius: 20px 20px 0 0;
+      padding: 20px 18px 24px;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .close-btn {
+      background: #f1f3f5;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .field-group {
+      margin-bottom: 12px;
+    }
+    .field-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    .field-group input, .field-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .order-preview {
+      background: #f8f9fa;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      margin: 12px 0;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .btn-kakao {
+      width: 100%;
+      background: var(--kakao);
+      color: var(--kakao-text);
+      border: none;
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 15.5px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .btn-copy-only {
+      width: 100%;
+      background: #eef1f4;
+      color: var(--text);
+      border: none;
+      border-radius: 10px;
+      padding: 11px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .guide-text {
+      font-size: 12px;
+      color: var(--subtext);
+      text-align: center;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--subtext);
+      font-size: 14px;
+    }
+  
+    .brand { user-select: none; -webkit-user-select: none; }
+    #adminBar { position: sticky; top: 0; z-index: 120; background: #1a1d20; color: #fff; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 7px 10px; font-size: 12.5px; }
+    #adminBar button { background: #3a4047; color: #fff; border: none; border-radius: 6px; padding: 6px 9px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    #adminBar .dirty { color: #ffb347; font-weight: 700; }
+    body.admin header { top: 76px; }
+    .admin-row { margin-top: 8px; display: flex; gap: 6px; }
+    .admin-row button { background: #eef1f4; border: none; border-radius: 6px; padding: 5px 9px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .opt-btn { flex-shrink: 0; border: 1px solid var(--primary); background: #fff; color: var(--primary); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; font-weight: 800; cursor: pointer; }
+    .opt-btn.on { background: var(--primary); color: #fff; }
+    .item-picked { font-size: 12.5px; color: var(--primary); font-weight: 700; margin-top: 3px; }
+    .soldout-tag { background: #e5e8eb; color: #666d75; font-weight: 800; font-size: 13px; padding: 7px 12px; border-radius: 8px; }
+    .item-card.sold { opacity: .55; }
+    .opt-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 4px; border-bottom: 1px solid var(--border); }
+    .opt-row label { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; flex: 1; cursor: pointer; }
+    .opt-row input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--primary); }
+    .opt-row.checked label { color: var(--primary); font-weight: 800; }
+    .field-group textarea { resize: vertical; min-height: 64px; }
+    .check-line { display: flex; gap: 16px; margin-bottom: 14px; font-size: 14px; }
+
+    .slot { display: block; width: 100%; margin: 0 0 6px; padding: 10px; border: 2px dashed var(--primary); background: #eefaf6; color: var(--primary); border-radius: 10px; font-size: 13px; font-weight: 800; cursor: pointer; }
+    .item-card.moving { outline: 3px solid var(--accent); background: #fff6ef; }
+    #moveBar { position: fixed; left: 0; right: 0; bottom: 76px; z-index: 160; background: #1a1d20; color: #fff; padding: 10px 14px; display: flex; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; line-height: 1.4; }
+    #moveBar small { color: #c5ccd3; }
+    #moveBar .mv-btns { display: flex; gap: 6px; flex-shrink: 0; }
+    #moveBar button { background: #3a4047; color: #fff; border: none; border-radius: 6px; padding: 8px 10px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    .addp { color: var(--accent); font-weight: 700; margin-left: 6px; font-size: 13px; }
+
+    .hint { font-size: 11.5px; color: var(--accent); font-weight: 700; margin-top: 2px; }
+    .acct { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #f8f9fa; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; font-size: 13px; line-height: 1.5; }
+    .acct button { flex-shrink: 0; background: var(--primary); color: #fff; border: none; border-radius: 8px; padding: 9px 12px; font-weight: 800; font-size: 13px; cursor: pointer; }
+
+    .cm-cat { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: #eef8f5; border-radius: 10px; padding: 8px 10px; margin-top: 12px; font-weight: 800; }
+    .cm-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 7px 4px 7px 18px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+    .cm-name { flex: 1; min-width: 100px; }
+    .cm-name small { color: var(--subtext); font-weight: 600; }
+    .cm-btns { display: flex; flex-wrap: wrap; gap: 4px; }
+    .cm-btns button { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .cm-pick { background: #fff6ef; border: 2px solid var(--accent); border-radius: 10px; padding: 10px; margin: 10px 0; font-size: 13.5px; }
+
+    /* 담배 배달 안내 */
+    .notice-bar.tobacco { background: #fff4e6; color: #8a4300; border-top: 1px solid #ffe1bd; }
+    .field-help { margin: 6px 2px 0; font-size: 12px; line-height: 1.5; color: #7a5a3a; background: #fff8ef; border-radius: 8px; padding: 7px 9px; }
+
+    /* 대분류: 항상 보이는 한 줄 버튼 (옆으로 밀어서 이동) */
+    .tabs { gap: 8px; padding: 8px 16px 10px; -webkit-overflow-scrolling: touch; mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent); }
+    .cat-chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: #fff; color: var(--text); border-radius: 999px; padding: 9px 14px; font-size: 14px; font-weight: 800; white-space: nowrap; cursor: pointer; }
+    .cat-chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .cat-badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+
+    /* 하단 바: 장바구니 버튼 */
+    body { padding-bottom: 150px; }
+    .cart-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: 6px; border-radius: 10px; background: #fff; color: var(--primary-dark); font-size: 12px; font-weight: 800; vertical-align: middle; }
+    .cart-badge[hidden] { display: none; }
+    .bottom-inner { gap: 8px; flex-wrap: wrap; }
+    .total-info { flex: 1 1 100%; display: flex; align-items: baseline; justify-content: space-between; }
+    .bottom-bar > .hint { max-width: 640px; margin: 0 auto 8px; text-align: center; font-size: 12px; }
+    .bottom-bar > .hint:empty { display: none; }
+    .order-open-btn { flex: 1 1 0; padding: 14px 8px; font-size: 15px; white-space: nowrap; }
+    #moveBar { bottom: 130px; }
+    /* 장바구니 창 */
+    .ci-sum-top { font-size: 13.5px; color: var(--subtext); margin: 0 2px 8px; }
+    .ci-sum-top b { color: var(--primary-dark); }
+    .ci-row { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; padding: 12px 2px; border-bottom: 1px solid var(--border); }
+    .ci-name { font-size: 14.5px; font-weight: 800; line-height: 1.35; }
+    .ci-opt { display: inline-block; margin-top: 3px; background: #eef8f5; color: var(--primary-dark); border-radius: 6px; padding: 2px 7px; font-size: 12px; font-weight: 700; }
+    .ci-unit { font-size: 12px; color: var(--subtext); margin-top: 3px; }
+    .ci-del { align-self: start; background: none; border: none; color: #8a9097; font-size: 12.5px; font-weight: 700; cursor: pointer; padding: 2px 0 2px 8px; }
+    .ci-line2 { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
+    .ci-total { font-size: 15.5px; font-weight: 800; }
+    .qty-btn:disabled { opacity: .35; cursor: not-allowed; }
+    .ci-empty { text-align: center; padding: 34px 10px; font-size: 15px; font-weight: 700; line-height: 1.8; color: var(--subtext); }
+    .ci-empty small { font-weight: 500; font-size: 13px; }
+    .ci-foot { margin-top: 12px; }
+    .ci-min { font-size: 12.5px; font-weight: 700; margin-bottom: 4px; }
+    .ci-bar { height: 7px; background: #e9edf0; border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+    .ci-bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; transition: width .2s; }
+    .ci-bar.ok i { background: var(--primary); }
+    .ci-calc { background: #f8f9fa; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; }
+    .ci-calc div { display: flex; justify-content: space-between; padding: 2px 0; }
+    .ci-calc .big { font-size: 16px; font-weight: 800; color: var(--primary-dark); padding-top: 6px; margin-top: 4px; border-top: 1px dashed var(--border); }
+    .ci-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .ci-actions .btn-copy-only { width: 34%; }
+    .ci-go { flex: 1; background: var(--primary); color: #fff; border: none; border-radius: 10px; padding: 13px; font-size: 15px; font-weight: 800; cursor: pointer; }
+    .ci-go:disabled { background: #c5ccd3; cursor: not-allowed; }
+    .ci-note { font-size: 11.5px; color: var(--subtext); margin-top: 8px; line-height: 1.5; }
+
+    /* 펜션 선택 / 배달비 */
+    .pick-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; font-size: 15px; color: var(--text); cursor: pointer; }
+    .pick-btn b { font-weight: 800; }
+    .pk-fee { color: var(--primary-dark); font-weight: 800; font-size: 13.5px; white-space: nowrap; }
+    .pk-search { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 15px; margin-bottom: 8px; background: #f8f9fa; }
+    .pk-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; background: none; border: none; border-bottom: 1px solid var(--border); padding: 14px 4px; font-size: 15px; font-weight: 700; color: var(--text); cursor: pointer; }
+    .pk-row.pk-other { color: var(--subtext); }
+    .pk-mini { background: #fff; border: 1px solid var(--primary); color: var(--primary-dark); border-radius: 8px; padding: 5px 10px; font-size: 13px; font-weight: 800; cursor: pointer; }
+    #orderSum { margin: 0 0 12px; }
+    .pen-area { width: 100%; min-height: 260px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.7; font-family: inherit; }
+  
+    /* 교차할인 배지 및 진행 배너 */
+    .bundle-tag { display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 5px; margin-left: 5px; vertical-align: middle; }
+    .bundle-tag.b4 { background: #e6f4ff; color: #0958d9; border: 1px solid #91caff; }
+    .bundle-tag.b3 { background: #f9f0ff; color: #531dab; border: 1px solid #d3adf7; }
+    .bundle-tag.applied { background: #e8f5f1; color: var(--primary-dark); border-color: #95deca; }
+    .bundle-banner { position: sticky; top: 0; z-index: 50; margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; font-size: 12.5px; line-height: 1.45; border: 1px solid #91caff; background: #f0f7ff; color: #003eb3; }
+    .bundle-banner.ok { border-color: #87e8de; background: #eef8f5; color: #0b5d47; }
+    .bundle-banner b { font-weight: 800; }
+    .bundle-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .bundle-line + .bundle-line { margin-top: 6px; padding-top: 6px; border-top: 1px dashed rgba(0,0,0,0.1); }
+    .bundle-pill { flex-shrink: 0; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: rgba(255,255,255,0.85); }
+    .price-strike { text-decoration: line-through; color: #9aa0a6; font-size: 12px; font-weight: 500; margin-right: 4px; }
+    .price-sale { color: var(--primary-dark); font-weight: 800; }
+    .ci-disc { color: #d9480f; font-weight: 800; }
+    .field-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; background: #fff; }
+
+
+    /* ===== 상품 목록 칸 최대화 ===== */
+    header { position: static; box-shadow: none; border-bottom: 0; }
+    .header-top { padding: 10px 14px 6px; }
+    .brand h1 { font-size: 18px; letter-spacing: 0.3px; word-spacing: 2px; white-space: nowrap; }
+    .notice-bar { font-size: 12px; padding: 6px 14px; line-height: 1.35; }
+    .sticky-nav { position: sticky; top: 0; z-index: 100; background: #fff; border-bottom: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    body.admin .sticky-nav { top: 76px; }
+    .search-wrap { padding: 8px 12px 2px; }
+    .search-input { padding: 9px 12px; font-size: 14px; }
+    .tabs { padding: 6px 12px 8px; gap: 6px; }
+    .cat-chip { padding: 7px 12px; font-size: 13.5px; }
+    .container { padding: 8px 12px; }
+    .item-card { padding: 10px 12px; margin-bottom: 6px; }
+    .subcategory-head { min-height: 42px; padding: 8px 12px; }
+    .bottom-bar { padding: 7px 12px 9px; }
+    .bottom-bar > .hint { margin: 0 auto 3px; font-size: 11.5px; }
+    .bottom-inner { gap: 6px; }
+    .total-info .sum { font-size: 16px; }
+    .order-open-btn { padding: 11px 8px; font-size: 14.5px; border-radius: 11px; }
+    body { padding-bottom: 112px; }
+    #moveBar { bottom: 112px; }
+
+    .lo-card { margin: 14px 0 0; background: #f8f9fa; border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .lo-title { font-size: 14px; font-weight: 800; }
+    .lo-title small { display: block; margin-top: 2px; color: var(--subtext); font-weight: 600; font-size: 12px; }
+    .lo-items { margin: 8px 0 10px; font-size: 13px; line-height: 1.5; color: var(--text); }
+    .lo-actions { display: flex; gap: 6px; }
+    .lo-actions button { flex: 1; border-radius: 9px; padding: 11px 6px; font-size: 13.5px; font-weight: 800; cursor: pointer; border: 1px solid var(--primary); background: #fff; color: var(--primary-dark); }
+    .lo-actions button.main { background: var(--primary); color: #fff; }
+
+    .cat-ico { font-size: 16px; line-height: 1; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="brand" id="brand">
+      <span class="brand-badge">7-ELEVEN</span>
+      <h1>세븐일레븐 편의점 배달</h1>
+    </div>
+  </div>
+  <div class="notice-bar tobacco">
+    🚬 담배는 <strong>다른 상품 주문에 추가로만</strong> 가능해요. (최소 주문금액 <span class="tmin">2만원</span> 미포함, 요청란에 적어주세요)<br>
+    🪪 술·담배는 <strong>미성년자 판매 불가 · 수령 시 신분증 확인</strong>
+  </div>
+</header>
+<div class="sticky-nav">
+  <div class="search-wrap">
+    <input type="text" id="searchInput" class="search-input" placeholder="상품명 검색 (예: 삼겹살, 얼음, 소주, 라면, 햇반...)">
+  </div>
+  <div class="tabs" id="categoryTabs"></div>
+</div>
+
+<main class="container" id="productList"></main>
+
+<div class="bottom-bar">
+  <div class="hint" id="cartHint"></div>
+  <div class="bottom-inner">
+    <div class="total-info">
+      <div class="count" id="cartSummaryText">담은 상품 0개</div>
+      <div class="sum" id="cartTotalPrice">0원</div>
+    </div>
+    <button class="order-open-btn" id="openCartBtn" type="button" aria-label="장바구니 보기">장바구니<span class="cart-badge" id="cartBadge" hidden="">0</span></button>
+    <button class="order-open-btn" id="openOrderBtn" disabled="">주문서 확인 및 전송</button>
+  </div>
+</div>
+
+<!-- 주문서 확인 모달 -->
+<div class="modal-backdrop" id="orderModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>주문서 확인 및 카톡 전송</h2>
+      <button class="close-btn" id="closeModalBtn">×</button>
+    </div>
+
+    <div class="field-group" id="pensionPickGroup" style="">
+      <label>펜션 선택 (필수)</label>
+      <button type="button" class="pick-btn" id="pensionPickBtn"><b>강변마루 펜션</b><span class="pk-fee">5,000원</span></button>
+    </div>
+
+    <div class="field-group">
+      <label for="pensionInput" id="pensionLabel">객실 호수 / 상세 위치 (필수)</label>
+      <input type="text" id="pensionInput" placeholder="예: 201호">
+    </div>
+
+    <div class="field-group">
+      <label for="memoInput">연락 가능한 연락처 (필수)</label>
+      <input type="tel" id="memoInput" inputmode="tel" autocomplete="tel" placeholder="예: 010-1234-5678">
+    </div>
+
+    <div class="field-group">
+      <label for="tobaccoInput">🚬 담배가 필요하신가요? (선택)</label>
+      <textarea id="tobaccoInput" rows="2" placeholder="필요하실 때만 적어주세요. 예) 에쎄 체인지 1갑, 말보로 레드 2갑"></textarea>
+      <p class="field-help">🪪 술·담배는 수령 시 신분증을 확인해요. (미성년자 판매 불가)</p>
+    </div>
+
+    <div class="ci-calc" id="orderSum"></div>
+
+    <div class="order-preview" id="orderPreviewText"></div>
+
+    <div class="acct" id="acctBox" style="display:none"></div>
+    <button class="btn-kakao" id="copyAndKakaoBtn">주문서 복사하고 카톡 채팅창 열기</button>
+    <button class="btn-copy-only" id="copyOnlyBtn">주문서 텍스트만 복사하기</button>
+    <p class="guide-text">버튼을 누르면 주문서가 자동 복사됩니다.<br>카카오톡 채팅창이 열리면 입력칸을 <strong>길게 눌러 [붙여넣기]</strong> 한 뒤 전송해 주세요!</p>
+  </div>
+</div>
+
+<!-- 장바구니 모달 -->
+<div class="modal-backdrop" id="cartModal">
+  <div class="modal">
+    <div class="modal-header"><h2>🛒 장바구니</h2><button class="close-btn" id="cartClose" type="button">×</button></div>
+    <div id="cartBody"></div>
+    <div class="ci-foot" id="cartFoot"></div>
+  </div>
+</div>
+
+<!-- 펜션 선택 모달 -->
+<div class="modal-backdrop" id="pensionModal">
+  <div class="modal">
+    <div class="modal-header"><h2>🏨 배달받을 펜션 선택</h2><button class="close-btn" id="pensionClose" type="button">×</button></div>
+    <input type="search" class="pk-search" id="pensionSearch" placeholder="펜션명 검색">
+    <div id="pensionList"></div>
+  </div>
+</div>
+
+<!-- 맛 선택 모달 -->
+<div class="modal-backdrop" id="optModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="optTitle">서울흰우유 200ml · 기본가 1,300원</h2><button class="close-btn" id="optClose">×</button></div>
+    <p class="guide-text" style="text-align:left;margin-bottom:6px">원하는 맛을 체크하고 수량을 정해 주세요. (여러 개 선택 가능)</p>
+    <div id="optList"></div>
+    <button class="btn-kakao" id="optDone" style="background:var(--primary);color:#fff;margin-top:14px">선택 완료</button>
+  </div>
+</div>
+
+<script id="mainScript">
+  const KAKAO_CHAT_URL = "https://pf.kakao.com/_WUJWxj/chat";
+  const ADMIN_PIN_HASH = "yjg23l"; // 관리자 PIN (해시값)
+  const MIN_ORDER_AMOUNT = 20000; // 최소 주문금액 기본값
+
+  /* 품목 데이터: 관리자 모드 > [파일로 저장] 하면 이 부분이 자동으로 갱신됩니다 */
+  /*P_START*/
+  const DEFAULT_PRODUCTS = [
+    {"id":"p001","cat":"아이스크림 케이크","sub":"아이스크림 케이크","name":"하겐다즈 초코바닐라 아이스크림 케이크","price":45000,"note":"바닐라맛+초콜릿맛","hit":true},
+    {"id":"p002","cat":"아이스크림 케이크","sub":"아이스크림 케이크","name":"하겐다즈 딸기초콜릿 아이스크림 케이크","price":45000,"note":"딸기맛+초콜릿맛","hit":true},
+    {"id":"p003","cat":"음료","sub":"커피","name":"파우치 음료 [팩]","price":1700,"note":"","options":["블랙","스위트","헤이즐넛",{"n":"디카페인","a":-100},{"n":"복숭아","a":-400}]},
+    {"id":"p004","cat":"음료","sub":"커피","name":"스타벅스 320ml [컵]","price":3300,"note":"","options":["까페라떼","바닐라라떼"]},
+    {"id":"p005","cat":"음료","sub":"커피","name":"스타벅스 더블샷 275ml [캔]","price":3300,"note":"","options":["바닐라","크림"]},
+    {"id":"p006","cat":"음료","sub":"커피","name":"바리스타 325ml [컵]","price":3500,"note":"","options":["블랙","쇼콜라모카","플란넬드립","바닐라라떼"]},
+    {"id":"p007","cat":"음료","sub":"커피","name":"칸타타 275ml [캔]","price":2800,"note":"","options":["블랙","라떼","스위트"]},
+    {"id":"p008","cat":"음료","sub":"커피","name":"TOP 275ml [캔]","price":2700,"note":"","options":["블랙","라떼","스위트"]},
+    {"id":"p009","cat":"음료","sub":"커피","name":"칸타타 콘트라베이스 500ml [페트]","price":2900,"note":"","options":["블랙","라떼"]},
+    {"id":"p010","cat":"음료","sub":"커피","name":"레쓰비 그란데 500ml [페트]","price":2200,"note":"","options":["라떼","헤이즐넛"]},
+    {"id":"p011","cat":"음료","sub":"커피","name":"세븐 커피 1.5L [팩]","price":4600,"note":"","options":["아메리카노블랙","헤이즐넛","스위트아메리카노"]},
+    {"id":"p012","cat":"음료","sub":"쥬스","name":"모구모구 320ml [페트]","price":1900,"note":"","options":["딸기","리치","복숭아","요구르트"]},
+    {"id":"p013","cat":"음료","sub":"쥬스","name":"뽀로로음료 235ml[페트]","price":1600,"note":"","options":["딸기","사과","밀크","보리차"]},
+    {"id":"p014","cat":"음료","sub":"쥬스","name":"제주감귤 500ml[페트]","price":2000,"note":""},
+    {"id":"p015","cat":"음료","sub":"쥬스","name":"자연은 알로에 500ml[페트]","price":2350,"note":""},
+    {"id":"p016","cat":"음료","sub":"쥬스","name":"초록매실 500ml[페트]","price":2350,"note":""},
+    {"id":"p017","cat":"음료","sub":"쥬스","name":"갈아만든배 500ml[페트]","price":2300,"note":""},
+    {"id":"p018","cat":"음료","sub":"쥬스","name":"델몬트 오렌지 1.5L[페트]","price":5000,"note":""},
+    {"id":"p019","cat":"음료","sub":"쥬스","name":"델몬트 포도 1.5L[페트]","price":5000,"note":""},
+    {"id":"p020","cat":"음료","sub":"쥬스","name":"델몬트 1.5L[페트]","price":4500,"note":"","options":["망고","알로에"]},
+    {"id":"p021","cat":"음료","sub":"탄산","name":"토닉워터 300ml[페트]","price":1900,"note":"","options":["기본","제로"],"hit":true},
+    {"id":"p022","cat":"음료","sub":"탄산","name":"토닉워터 600ml[페트]","price":2900,"note":""},
+    {"id":"p023","cat":"음료","sub":"탄산","name":"코카콜라 500ml[페트]","price":2600,"note":"","options":["오리지날","제로"]},
+    {"id":"p024","cat":"음료","sub":"탄산","name":"펩시콜라 500ml[페트]","price":2500,"note":"","options":["오리지날","제로"]},
+    {"id":"p025","cat":"음료","sub":"탄산","name":"칠성사이다 500ml[페트]","price":2500,"note":"","options":["오리지날","제로"]},
+    {"id":"p026","cat":"음료","sub":"탄산","name":"환타 600ml[페트]","price":2400,"note":"","options":["오렌지","파인애플"]},
+    {"id":"p027","cat":"음료","sub":"탄산","name":"밀키스 500ml[페트]","price":2400,"note":""},
+    {"id":"p028","cat":"음료","sub":"탄산","name":"코카콜라 1.5L","price":4300,"note":"","options":["오리지날","제로"]},
+    {"id":"p029","cat":"음료","sub":"탄산","name":"칠성사이다 1.5L[페트]","price":4200,"note":"","options":["오리지날","제로"]},
+    {"id":"p030","cat":"음료","sub":"이온 / 에너지","name":"까스활명수 75ml[병]","price":1200,"note":""},
+    {"id":"p031","cat":"음료","sub":"이온 / 에너지","name":"진쌍화 100ml[병]","price":1400,"note":""},
+    {"id":"p032","cat":"음료","sub":"이온 / 에너지","name":"박카스F 120ml[병]","price":1000,"note":""},
+    {"id":"p033","cat":"음료","sub":"이온 / 에너지","name":"비타500 180ml[병]","price":1900,"note":""},
+    {"id":"p034","cat":"음료","sub":"이온 / 에너지","name":"2%부족할때 500ml[페트]","price":2000,"note":""},
+    {"id":"p035","cat":"음료","sub":"이온 / 에너지","name":"파워에이드 마운틴 1.5L[페트]","price":3800,"note":"","hit":true},
+    {"id":"p036","cat":"음료","sub":"이온 / 에너지","name":"게토레이 레몬 1.5L[페트]","price":3600,"note":""},
+    {"id":"p037","cat":"음료","sub":"이온 / 에너지","name":"포카리스웨트 1.5L[페트]","price":3900,"note":""},
+    {"id":"p038","cat":"음료","sub":"이온 / 에너지","name":"핫식스 더킹파워 355ml[캔]","price":2500,"note":"","options":["오리지날","제로","포스","러쉬"]},
+    {"id":"p039","cat":"음료","sub":"이온 / 에너지","name":"몬스터에너지 355ml[캔]","price":2300,"note":"","options":["오리지날","제로","울트라","시트라","망고로코"]},
+    {"id":"p040","cat":"음료","sub":"유음료","name":"서울흰우유 300ml","price":2100,"note":"","options":["흰우유","초코","딸기","커피"]},
+    {"id":"p041","cat":"음료","sub":"유음료","name":"서울흰우유 1L","price":3200,"note":""},
+    {"id":"p042","cat":"음료","sub":"유음료","name":"요구르트 그란데 280ml[페트]","price":1700,"note":""},
+    {"id":"p043","cat":"음료","sub":"유음료","name":"베지밀 90ml[병]","price":1800,"note":"","options":["베지밀A","베지밀B"]},
+    {"id":"p044","cat":"음료","sub":"유음료","name":"빙그레 바나나우유","price":1800,"note":""},
+    {"id":"p045","cat":"음료","sub":"유음료","name":"초코, 딸기에몽 180ml [팩]","price":1600,"note":"","options":["초코에몬","딸기에몽"],"hit":true},
+    {"id":"p046","cat":"음료","sub":"유음료","name":"허쉬초코팩 235ml","price":1600,"note":""},
+    {"id":"p047","cat":"음료","sub":"유음료","name":"하늘보리 1L","price":2500,"note":""},
+    {"id":"p048","cat":"음료","sub":"유음료","name":"옥수수수염차 1.5L","price":3300,"note":""},
+    {"id":"p049","cat":"음료","sub":"물 / 티","name":"순수얼음 1KG","price":2500,"note":"","hit":true},
+    {"id":"p050","cat":"음료","sub":"물 / 티","name":"순수얼음 3KG","price":6000,"note":""},
+    {"id":"p051","cat":"음료","sub":"물 / 티","name":"컵얼음 [그란데]","price":1300,"note":""},
+    {"id":"p052","cat":"음료","sub":"물 / 티","name":"하이볼 컵얼음 [빅볼]","price":1500,"note":"","hit":true},
+    {"id":"p053","cat":"음료","sub":"물 / 티","name":"생수 2.0L[페트]","price":1950,"note":""},
+    {"id":"p054","cat":"음료","sub":"물 / 티","name":"트레비 500ml[페트]","price":1800,"note":"","options":["레몬","라임","자몽"]},
+    {"id":"p055","cat":"음료","sub":"물 / 티","name":"컨디션 헛개수 500ml[페트]","price":2500,"note":""},
+    {"id":"p056","cat":"음료","sub":"물 / 티","name":"아이스티 500ml[페트]","price":2500,"note":"","options":["복숭아","사과","샤인머스켓","레몬"]},
+    {"id":"p057","cat":"음료","sub":"물 / 티","name":"비락식혜 500ml[페트]","price":2200,"note":""},
+    {"id":"p064","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"옥수수콘치즈 255g","price":5300,"note":"","hit":true},
+    {"id":"p065","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"고래사어묵탕","price":4200,"note":"","options":["얼큰한맛","시원한맛"],"hit":true},
+    {"id":"p068","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"더커진 국물떡볶이 300g","price":2900,"note":"","hit":true},
+    {"id":"p061","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"스모크치킨 180g","price":7000,"note":""},
+    {"id":"p062","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"의성마늘 2입 140g","price":4400,"note":""},
+    {"id":"p063","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"맥스봉 핫바 80g","price":2900,"note":"","options":["숯불구이맛","청양고추 후랑크","직화구이꼬치바","직화청양꼬치바"]},
+    {"id":"p066","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"미니비엔나 140g","price":4400,"note":""},
+    {"id":"p067","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"킬바사 270g","price":8900,"note":""},
+    {"id":"p069","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"CJ 우동","price":3900,"note":"","options":["가쓰오우동","얼큰우동"]},
+    {"id":"p070","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"머릿고기","price":10000,"note":""},
+    {"id":"p071","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"슬라이스족발 400g","price":11900,"note":""},
+    {"id":"p072","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"쫄깃한 편육 150g","price":8500,"note":""},
+    {"id":"p073","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"직화무뼈닭발 210g (냉장)","price":8900,"note":""},
+    {"id":"p074","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"유동골뱅이 230g (캔)","price":10900,"note":""},
+    {"id":"p075","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"찰진순대 273g","price":4200,"note":""},
+    {"id":"p076","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"스위트콘 340g (캔)","price":3000,"note":""},
+    {"id":"p077","cat":"안주 / 식사 / 라면 / 소스","sub":"안주","name":"황도, 백도 400g (캔)","price":5800,"note":"","options":["황도","백도"],"hit":true},
+    {"id":"p085","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"햇반 210g","price":2400,"note":""},
+    {"id":"p078","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"참치 150g","price":4800,"note":"","options":["라이트참치","고추참치","야채참치"]},
+    {"id":"p079","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"스팸 클래식 200g","price":6900,"note":""},
+    {"id":"p080","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"양반죽 285g","price":5200,"note":"","options":["쇠고기","야채","전복","닭","참치"]},
+    {"id":"p081","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"CJ 햇반컵밥 [국밥류]","price":4800,"note":"","options":["미역국","황태국","사골국"]},
+    {"id":"p082","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"CJ 햇반컵밥 [덮밥류]","price":4800,"note":"","options":["김된장","스팸","참치마요","치킨","스팸김치"]},
+    {"id":"p083","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"우리쌀 누룽지 60g [컵]","price":2300,"note":""},
+    {"id":"p084","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"3분카레, 짜장[팩]","price":2900,"note":"","options":["카레 매운맛","쇠고기짜장"]},
+    {"id":"p086","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"비비고 소고기미역국 500g","price":8500,"note":""},
+    {"id":"p087","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"비비고 한우사골곰탕 500g","price":3200,"note":""},
+    {"id":"p088","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"비비고 육개장 500g","price":8500,"note":""},
+    {"id":"p089","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"비비고 차돌된장찌개 460g","price":11900,"note":""},
+    {"id":"p090","cat":"안주 / 식사 / 라면 / 소스","sub":"식사","name":"비비고 김치찌개 460g","price":9900,"note":""},
+    {"id":"p095","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"냉동 삼겹살 500g (수입)","price":15100,"note":""},
+    {"id":"p096","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"냉동 삼겹살, 목살 300g (국산)","price":13500,"note":"","options":["삼겹살","목살"]},
+    {"id":"p097","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"비비고 왕교자 315g","price":8200,"note":"","options":["김치","고기"]},
+    {"id":"p098","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"고향만두","price":6000,"note":""},
+    {"id":"p099","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"멕시카나 닭강정","price":7900,"note":"","options":["매콤달콤","마늘간장"]},
+    {"id":"p100","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"안주야 불막창, 무뼈닭발 (냉동)","price":9500,"note":"","options":["불막창","무뼈닭발"]},
+    {"id":"p101","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"소바바 닭강정","price":9900,"note":"","options":["양념","허니","레드핫","마쏘킥"]},
+    {"id":"p102","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"우노 피자","price":6900,"note":"","options":["콤비네이션","불고기","페페로니"]},
+    {"id":"p103","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"먹태구이채 35g","price":6000,"note":""},
+    {"id":"p104","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"허니버터 아몬드 130g","price":5000,"note":""},
+    {"id":"p105","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"질러육포 30g","price":4900,"note":""},
+    {"id":"p106","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"허니버터 오징어 52g","price":7200,"note":""},
+    {"id":"p107","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"한치&땅콩 55g","price":7500,"note":""},
+    {"id":"p108","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"왕커다란 쥐포 2마리 95g","price":5700,"note":""},
+    {"id":"p109","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"세가지맛 오징어 36g","price":6900,"note":""},
+    {"id":"p110","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"대왕발조미 오징어다리","price":6000,"note":""},
+    {"id":"p111","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"오징어&땅콩 75g","price":11900,"note":""},
+    {"id":"p112","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"참징어 60g","price":9900,"note":""},
+    {"id":"p113","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"숏다리 20g","price":3100,"note":""},
+    {"id":"p094","cat":"안주 / 식사 / 라면 / 소스","sub":"냉동","name":"꾸이맨 30g","price":2500,"note":""},
+    {"id":"p114","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"봉지라면","price":1000,"note":"","options":["신라면","진라면 순한맛","진라면 매운맛",{"n":"불닭볶음면","a":250},{"n":"짜파게티","a":300},{"n":"너구리","a":150},{"n":"팔도비빔면","a":110}]},
+    {"id":"p115","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"컵라면","price":1200,"note":"","options":["육개장",{"n":"신라면","a":400},{"n":"진라면 순한맛","a":400},{"n":"진라면 매운맛","a":400},{"n":"불닭볶음면","a":600},{"n":"까르보불닭","a":600},{"n":"열라면","a":400},{"n":"왕뚜껑","a":400},{"n":"튀김우동","a":400}]},
+    {"id":"p091","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"인포켓치즈 20g","price":1800,"note":""},
+    {"id":"p092","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"슈레드피자치즈 25g","price":1400,"note":""},
+    {"id":"p093","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"슬라이스치즈 100g","price":2900,"note":""},
+    {"id":"p116","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"마요네즈","price":4600,"note":""},
+    {"id":"p117","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"케찹","price":5200,"note":""},
+    {"id":"p118","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"생와사비","price":4000,"note":""},
+    {"id":"p119","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"식용유","price":3500,"note":""},
+    {"id":"p120","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"초고추장 300g[튜브]","price":3400,"note":""},
+    {"id":"p121","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"고추장 200g","price":4750,"note":""},
+    {"id":"p122","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"양념듬뿍 쌈장","price":2550,"note":""},
+    {"id":"p123","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"허브솔트","price":2700,"note":""},
+    {"id":"p124","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"참기름","price":4600,"note":""},
+    {"id":"p060","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"새콤달콤 볶음김치 80g","price":2100,"note":""},
+    {"id":"p058","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"맛김치 200g","price":3700,"note":""},
+    {"id":"p059","cat":"안주 / 식사 / 라면 / 소스","sub":"라면 & 소스","name":"맛김치 400g","price":7300,"note":""},
+    {"id":"p160","cat":"스낵 / 과자 / 젤리","sub":"BEST 5","name":"하리보 젤리","price":2500,"note":"","options":["골든베렌","해피그레이프","콜라","스타믹스","믹스사우어"]},
+    {"id":"p125","cat":"스낵 / 과자 / 젤리","sub":"BEST 5","name":"기가마시멜로우 4입","price":3000,"note":"","hit":true},
+    {"id":"p126","cat":"스낵 / 과자 / 젤리","sub":"BEST 5","name":"추억의 쫀디기","price":2000,"note":""},
+    {"id":"p133","cat":"스낵 / 과자 / 젤리","sub":"BEST 5","name":"초코홈런볼 128g","price":5000,"note":"","hit":true},
+    {"id":"p152","cat":"스낵 / 과자 / 젤리","sub":"BEST 5","name":"허니버터칩 120g","price":3600,"note":"","hit":true},
+    {"id":"p146","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"새우깡, 매운새우깡 90g","price":1500,"note":"","hit":true},
+    {"id":"p149","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"포카칩","price":1700,"note":"","options":["오리지날","양파"]},
+    {"id":"p134","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"포테토칩","price":1700,"note":""},
+    {"id":"p153","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"꼬깔콘","price":1700,"note":"","options":["고소한맛","군옥수수","매콤달콤"]},
+    {"id":"p156","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"치토스","price":1700,"note":"","options":["매콤한맛","바베큐맛"]},
+    {"id":"p154","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"스윙칩","price":1700,"note":""},
+    {"id":"p150","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"태양의맛 썬칩 80g","price":1700,"note":""},
+    {"id":"p147","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"오징어땅콩 202g","price":3200,"note":""},
+    {"id":"p165","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"맛동산 165g","price":3200,"note":""},
+    {"id":"p148","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"콘칩 1500","price":1500,"note":""},
+    {"id":"p151","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"포스틱 84g","price":1700,"note":""},
+    {"id":"n1795593347075","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"꿀꽈배기 90g","price":1800,"note":""},
+    {"id":"p161","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"카라멜콘 땅콩","price":1500,"note":""},
+    {"id":"p139","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"자갈치 90g","price":1800,"note":""},
+    {"id":"p127","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"뻥튀기","price":1900,"note":""},
+    {"id":"p136","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"바나나킥 75g","price":1700,"note":""},
+    {"id":"p137","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"양파링 80g","price":1700,"note":""},
+    {"id":"p138","cat":"스낵 / 과자 / 젤리","sub":"봉지과자","name":"바프 허니버터팝콘 80g","price":1700,"note":""},
+    {"id":"p128","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"빼빼로","price":2000,"note":"","options":["초코","아몬드","누드"]},
+    {"id":"p129","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"초코송이","price":1200,"note":""},
+    {"id":"p166","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"촉촉한 초코칩","price":2800,"note":""},
+    {"id":"p164","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"프링글스","price":4200,"note":"","options":["오리지널","양파","치즈","매운맛"]},
+    {"id":"p131","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"구운감자","price":1000,"note":""},
+    {"id":"p130","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"오레오","price":2300,"note":"","options":["화이트","초코"]},
+    {"id":"p135","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"고소미 70g","price":1200,"note":""},
+    {"id":"p132","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"빈츠","price":3300,"note":""},
+    {"id":"p140","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"초코파이 (12개입)","price":5400,"note":""},
+    {"id":"p141","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"몽쉘 크림케익 (6개입)","price":3500,"note":""},
+    {"id":"p142","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"오예스 (12개입)","price":7000,"note":""},
+    {"id":"p143","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"마가렛트 (8개입)","price":3400,"note":""},
+    {"id":"p144","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"빅파이 (12개입)","price":3200,"note":""},
+    {"id":"p145","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"예감","price":1500,"note":"","options":["치즈","양파"]},
+    {"id":"p155","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"눈을감자 56g","price":2000,"note":""},
+    {"id":"p163","cat":"스낵 / 과자 / 젤리","sub":"젤리/캔디/껌","name":"소시지 (천하장사, 맥스봉)","price":2400,"note":"","options":["천하장사50g",{"n":"천하장사70g","a":400},{"n":"맥스봉 오리지널 70g","a":400},{"n":"맥스봉 빅소시지 150g","a":1700}]},
+    {"id":"p162","cat":"스낵 / 과자 / 젤리","sub":"젤리/캔디/껌","name":"가나초콜릿 70g","price":3400,"note":"","options":["오리지널","밀크"]},
+    {"id":"p159","cat":"스낵 / 과자 / 젤리","sub":"젤리/캔디/껌","name":"킨더초코릿 50g (4입)","price":2800,"note":""},
+    {"id":"p158","cat":"스낵 / 과자 / 젤리","sub":"젤리/캔디/껌","name":"마이구미 (포도)","price":1000,"note":""},
+    {"id":"p157","cat":"스낵 / 과자 / 젤리","sub":"젤리/캔디/껌","name":"마이쮸 44g","price":800,"note":"","options":["포도","딸기","사과"]},
+    {"id":"p167","cat":"잡화","sub":"여행 용품","name":"나무젓가락 (10입)","price":1000,"note":""},
+    {"id":"p168","cat":"잡화","sub":"여행 용품","name":"다회용 숟가락 (10입)","price":1800,"note":""},
+    {"id":"p169","cat":"잡화","sub":"여행 용품","name":"다회용 택주컵 (3입)","price":1200,"note":""},
+    {"id":"p170","cat":"잡화","sub":"여행 용품","name":"종이컵 (30입)","price":2100,"note":""},
+    {"id":"p171","cat":"잡화","sub":"여행 용품","name":"종이공기 110mm (10입)","price":2200,"note":""},
+    {"id":"p172","cat":"잡화","sub":"여행 용품","name":"종이접시 230mm (10입)","price":2400,"note":""},
+    {"id":"p173","cat":"잡화","sub":"여행 용품","name":"위생호일","price":5600,"note":""},
+    {"id":"p174","cat":"잡화","sub":"여행 용품","name":"맥스부탄가스 220g","price":2300,"note":""},
+    {"id":"p175","cat":"잡화","sub":"여행 용품","name":"캠핑가스 (이소가스)","price":3900,"note":""},
+    {"id":"p176","cat":"잡화","sub":"여행 용품","name":"면장갑","price":1000,"note":""},
+    {"id":"p177","cat":"잡화","sub":"여행 용품","name":"다목적가위","price":5500,"note":""},
+    {"id":"p178","cat":"잡화","sub":"여행 용품","name":"다목적집게","price":3000,"note":""},
+    {"id":"p179","cat":"잡화","sub":"여행 용품","name":"아라로타 번개탄","price":2400,"note":""},
+    {"id":"p180","cat":"잡화","sub":"여행 용품","name":"자연참숯","price":4500,"note":""},
+    {"id":"p181","cat":"잡화","sub":"여행 용품","name":"나무장작","price":10000,"note":""},
+    {"id":"p182","cat":"잡화","sub":"여행 용품","name":"토치","price":12000,"note":""},
+    {"id":"p183","cat":"잡화","sub":"여행 용품","name":"석쇠","price":3000,"note":""},
+    {"id":"p184","cat":"잡화","sub":"여행 용품","name":"은박 돗자리","price":6000,"note":""},
+    {"id":"p185","cat":"잡화","sub":"여행 용품","name":"키친타올 1P","price":1800,"note":""},
+    {"id":"p186","cat":"잡화","sub":"여행 용품","name":"5핀 일체형충전기","price":10000,"note":""},
+    {"id":"p187","cat":"잡화","sub":"여행 용품","name":"8핀 분리형충전기 (아이폰)","price":17500,"note":""},
+    {"id":"p188","cat":"잡화","sub":"여행 용품","name":"C타입 분리형충전기","price":17000,"note":""},
+    {"id":"p189","cat":"잡화","sub":"미용 용품","name":"손톱깎이","price":3900,"note":""},
+    {"id":"p190","cat":"잡화","sub":"미용 용품","name":"기본머리끈 (검정 5입)","price":2100,"note":""},
+    {"id":"p191","cat":"잡화","sub":"미용 용품","name":"샤워타올","price":2400,"note":""},
+    {"id":"p192","cat":"잡화","sub":"미용 용품","name":"세면타올","price":4900,"note":"","options":["블루","화이트"]},
+    {"id":"p193","cat":"잡화","sub":"미용 용품","name":"순면 멸균면봉 (개별포장 50입)","price":2000,"note":""},
+    {"id":"p194","cat":"잡화","sub":"미용 용품","name":"리뉴 렌즈세척액 60ml 세트","price":4000,"note":""},
+    {"id":"p195","cat":"잡화","sub":"미용 용품","name":"센카 퍼펙트휩 클렌징폼","price":9800,"note":""},
+    {"id":"p196","cat":"잡화","sub":"미용 용품","name":"베이비로션 100ml","price":6000,"note":"","options":["화이트","핑크"]},
+    {"id":"p197","cat":"잡화","sub":"미용 용품","name":"도루코 일회용면도기","price":2000,"note":""},
+    {"id":"p198","cat":"잡화","sub":"미용 용품","name":"일회용 치실 (20입)","price":1500,"note":""},
+    {"id":"p199","cat":"잡화","sub":"미용 용품","name":"2080 칫솔","price":3000,"note":""},
+    {"id":"p200","cat":"잡화","sub":"미용 용품","name":"1박2일 칫솔치약세트","price":1900,"note":""},
+    {"id":"p201","cat":"잡화","sub":"미용 용품","name":"미세모 치약칫솔세트","price":3800,"note":""},
+    {"id":"p202","cat":"잡화","sub":"미용 용품","name":"2080 치약 125g","price":4400,"note":""},
+    {"id":"p203","cat":"잡화","sub":"미용 용품","name":"가그린 오리지널 100ml","price":2300,"note":""},
+    {"id":"p204","cat":"잡화","sub":"미용 용품","name":"여행용 세트","price":8900,"note":""},
+    {"id":"p205","cat":"잡화","sub":"미용 용품","name":"한가위 화투","price":5000,"note":""},
+    {"id":"p206","cat":"잡화","sub":"미용 용품","name":"트럼프 (카드)","price":13000,"note":""},
+    {"id":"p207","cat":"잡화","sub":"미용 용품","name":"오로라 가루","price":2000,"note":""},
+    {"id":"p208","cat":"잡화","sub":"위생용품 / 의약외품","name":"남성 스니커즈 양말 (흰색)","price":3600,"note":""},
+    {"id":"p209","cat":"잡화","sub":"위생용품 / 의약외품","name":"여성 스니커즈 양말 (흰색)","price":3600,"note":""},
+    {"id":"p210","cat":"잡화","sub":"위생용품 / 의약외품","name":"남성 트렁크팬티","price":9900,"note":"","options":["95","100","105"]},
+    {"id":"p211","cat":"잡화","sub":"위생용품 / 의약외품","name":"비비안 여성 면팬티","price":8900,"note":"","options":["90","95","100"]},
+    {"id":"p212","cat":"잡화","sub":"위생용품 / 의약외품","name":"탬폰 10입","price":7900,"note":"","options":["레귤러","슈퍼"]},
+    {"id":"p213","cat":"잡화","sub":"위생용품 / 의약외품","name":"화이트 팬티라이너 24P","price":4300,"note":""},
+    {"id":"p214","cat":"잡화","sub":"위생용품 / 의약외품","name":"좋은느낌 울트라 오버나이트 4P","price":10500,"note":""},
+    {"id":"p215","cat":"잡화","sub":"위생용품 / 의약외품","name":"좋은느낌 슬림 날개","price":9900,"note":"","options":["중","대"]},
+    {"id":"p216","cat":"잡화","sub":"위생용품 / 의약외품","name":"네이처 기저귀 3P","price":5200,"note":"","options":["4단계","5단계"]},
+    {"id":"p217","cat":"잡화","sub":"위생용품 / 의약외품","name":"물놀이 기저귀 팬티 5단계 3입","price":9000,"note":""},
+    {"id":"p218","cat":"잡화","sub":"위생용품 / 의약외품","name":"깨끗한나라 물티슈 캡형 70매","price":5300,"note":""},
+    {"id":"p219","cat":"잡화","sub":"위생용품 / 의약외품","name":"과산화수소 150ml","price":3000,"note":""},
+    {"id":"p220","cat":"잡화","sub":"위생용품 / 의약외품","name":"마데카솔 연고","price":7800,"note":""},
+    {"id":"p221","cat":"잡화","sub":"위생용품 / 의약외품","name":"에이스밴드S (일반형)","price":1500,"note":""},
+    {"id":"p222","cat":"잡화","sub":"위생용품 / 의약외품","name":"아주 아팡 스밴드","price":1700,"note":""},
+    {"id":"p223","cat":"잡화","sub":"위생용품 / 의약외품","name":"해피 모기향 10p","price":2900,"note":""},
+    {"id":"p224","cat":"잡화","sub":"위생용품 / 의약외품","name":"모기기피제 (분사형)","price":11900,"note":""},
+    {"id":"p225","cat":"잡화","sub":"위생용품 / 의약외품","name":"콘돔 001","price":14900,"note":""},
+    {"id":"p226","cat":"잡화","sub":"위생용품 / 의약외품","name":"콘돔 003","price":6500,"note":""},
+    {"id":"p227","cat":"잡화","sub":"물놀이 용품","name":"삼선 슬리퍼 (230~280)","price":6500,"note":""},
+    {"id":"p228","cat":"잡화","sub":"물놀이 용품","name":"아쿠아 슈즈 (230~280)","price":16000,"note":""},
+    {"id":"p229","cat":"잡화","sub":"물놀이 용품","name":"비치볼","price":6000,"note":""},
+    {"id":"p230","cat":"잡화","sub":"물놀이 용품","name":"반팔 티셔츠, 반바지 (색상랜덤)","price":12000,"note":""},
+    {"id":"p231","cat":"잡화","sub":"물놀이 용품","name":"스노클 세트","price":27000,"note":""},
+    {"id":"p232","cat":"잡화","sub":"물놀이 용품","name":"튜브 (100cm) - 성인용","price":23500,"note":""},
+    {"id":"p233","cat":"잡화","sub":"물놀이 용품","name":"손잡이 튜브 (75cm) - 아동용","price":19000,"note":""},
+    {"id":"p234","cat":"잡화","sub":"물놀이 용품","name":"보행기 튜브 - 아동용","price":24000,"note":""},
+    {"id":"p235","cat":"잡화","sub":"물놀이 용품","name":"물안경 (성인)","price":14000,"note":""},
+    {"id":"p236","cat":"잡화","sub":"물놀이 용품","name":"물안경 (아동)","price":8000,"note":""},
+    {"id":"p237","cat":"주류","sub":"소주 / 숙취해소","name":"레몬즙 200ml","price":2500,"note":"","hit":true},
+    {"id":"p238","cat":"주류","sub":"소주 / 숙취해소","name":"홍초식초 900ml","price":10900,"note":""},
+    {"id":"p239","cat":"주류","sub":"소주 / 숙취해소","name":"상쾌환 3g","price":2900,"note":""},
+    {"id":"p240","cat":"주류","sub":"소주 / 숙취해소","name":"컨디션 스틱","price":3900,"note":"","options":["컨디션맛","그린애플맛","샤인머스킷맛","자두맛","망고맛","민트초코맛"]},
+    {"id":"p241","cat":"주류","sub":"소주 / 숙취해소","name":"컨디션 100ml[병]","price":5000,"note":"","options":["헛개","레이디"]},
+    {"id":"p242","cat":"주류","sub":"소주 / 숙취해소","name":"상쾌환 스틱","price":3900,"note":"","options":["청사과맛","샤인머스킷맛","납작복숭아맛","망고맛"]},
+    {"id":"p243","cat":"주류","sub":"소주 / 숙취해소","name":"알디콤","price":4800,"note":"","hit":true},
+    {"id":"p244","cat":"주류","sub":"소주 / 숙취해소","name":"무알콜 맥주 355ml [캔]","price":2000,"note":"","options":["Zero 카스","Zero 하이트"]},
+    {"id":"p245","cat":"주류","sub":"소주 / 숙취해소","name":"소주 360ml[병]","price":1900,"note":"","options":["참이슬 후레쉬","처음처럼","새로","진로","새로","참이슬 오리지널 (빨강)"]},
+    {"id":"p247","cat":"주류","sub":"소주 / 숙취해소","name":"새로 (오미자, 살구, 다래)","price":1900,"note":"","options":["오미자","살구","다래"]},
+    {"id":"p249","cat":"주류","sub":"소주 / 숙취해소","name":"소주 640ml[페트]","price":3300,"note":"","options":["참이슬 후레쉬","처음처럼","진로","새로"]},
+    {"id":"p252","cat":"주류","sub":"소주 / 숙취해소","name":"청하 300ml[병]","price":2700,"note":"","options":["청하 화인","청하 스파클링"]},
+    {"id":"p254","cat":"주류","sub":"소주 / 숙취해소","name":"백세주 375ml[병]","price":5100,"note":""},
+    {"id":"p255","cat":"주류","sub":"소주 / 숙취해소","name":"복분자 375ml[병]","price":10200,"note":""},
+    {"id":"p256","cat":"주류","sub":"소주 / 숙취해소","name":"매화수[병]","price":2500,"note":""},
+    {"id":"b_cass","cat":"주류","sub":"맥주 / 막걸리","name":"카스 500ml [캔]","price":2800,"note":"","hit":true,"bundle":{"group":"4can","req":4,"price":11000}},
+    {"id":"b_cass_lt","cat":"주류","sub":"맥주 / 막걸리","name":"카스라이트 500ml [캔]","price":2800,"note":"","bundle":{"group":"4can","req":4,"price":11000}},
+    {"id":"b_terra","cat":"주류","sub":"맥주 / 막걸리","name":"테라 500ml [캔]","price":2800,"note":"","hit":true,"bundle":{"group":"4can","req":4,"price":11000}},
+    {"id":"b_terra_lt","cat":"주류","sub":"맥주 / 막걸리","name":"테라라이트 500ml [캔]","price":2800,"note":"","bundle":{"group":"4can","req":4,"price":11000}},
+    {"id":"b_kelly","cat":"주류","sub":"맥주 / 막걸리","name":"켈리 500ml [캔]","price":2800,"note":"","bundle":{"group":"4can","req":4,"price":11000}},
+    {"id":"b_kloud","cat":"주류","sub":"맥주 / 막걸리","name":"클라우드 500ml [캔]","price":2750,"note":"","bundle":{"group":"4can","req":4,"price":11000}},
+    {"id":"b_bud","cat":"주류","sub":"맥주 / 막걸리","name":"버드와이저 500ml [캔]","price":4900,"note":"","bundle":{"group":"4can","req":4,"price":13000}},
+    {"id":"b_heineken","cat":"주류","sub":"맥주 / 막걸리","name":"하이네켄 500ml [캔]","price":4900,"note":"","bundle":{"group":"4can","req":4,"price":12000},"hit":true},
+    {"id":"b_asahi","cat":"주류","sub":"맥주 / 막걸리","name":"아사히 500ml [캔]","price":4900,"note":"","bundle":{"group":"4can","req":4,"price":13000},"hit":true},
+    {"id":"b_asahi_nama","cat":"주류","sub":"맥주 / 막걸리","name":"아사히 생맥주캔 485ml [캔]","price":5400,"note":"","bundle":{"group":"4can","req":4,"price":14000},"hit":true},
+    {"id":"b_sapporo","cat":"주류","sub":"맥주 / 막걸리","name":"삿포로 500ml [캔]","price":4500,"note":"","bundle":{"group":"4can","req":4,"price":12000}},
+    {"id":"b_blanc","cat":"주류","sub":"맥주 / 막걸리","name":"1664 블랑 500ml [캔]","price":4500,"note":"","bundle":{"group":"4can","req":4,"price":10000},"hit":true},
+    {"id":"b_hoegaarden","cat":"주류","sub":"맥주 / 막걸리","name":"호가든 500ml [캔]","price":4900,"note":"","bundle":{"group":"4can","req":4,"price":13000}},
+    {"id":"b_stella","cat":"주류","sub":"맥주 / 막걸리","name":"스텔라 아르투아 500ml [캔]","price":4900,"note":"","bundle":{"group":"4can","req":4,"price":13000}},
+    {"id":"b_kirin","cat":"주류","sub":"맥주 / 막걸리","name":"기린 이치방 500ml [캔]","price":4500,"note":"","bundle":{"group":"4can","req":4,"price":12000}},
+    {"id":"b_tsingtao","cat":"주류","sub":"맥주 / 막걸리","name":"칭따오 500ml [캔]","price":4500,"note":"","bundle":{"group":"4can","req":4,"price":12000}},
+    {"id":"b_guinness","cat":"주류","sub":"맥주 / 막걸리","name":"기네스 440ml [캔]","price":4900,"note":"","bundle":{"group":"4can","req":4,"price":12000}},
+    {"id":"b_kozel","cat":"주류","sub":"맥주 / 막걸리","name":"코젤 다크 500ml [캔]","price":4500,"note":"","bundle":{"group":"4can","req":4,"price":12000}},
+    {"id":"p258","cat":"주류","sub":"맥주 / 막걸리","name":"카스 500ml[병]","price":2500,"note":""},
+    {"id":"p260","cat":"주류","sub":"맥주 / 막걸리","name":"카프리 330ml[병]","price":2400,"note":""},
+    {"id":"p261","cat":"주류","sub":"맥주 / 막걸리","name":"KGB 보드카 330ml[병]","price":3900,"note":""},
+    {"id":"p262","cat":"주류","sub":"맥주 / 막걸리","name":"크루저 블루베리 275ml[병]","price":3300,"note":""},
+    {"id":"p263","cat":"주류","sub":"맥주 / 막걸리","name":"맥주 피쳐 1.6L[페트]","price":8300,"note":"","options":["카스","테라"]},
+    {"id":"p265","cat":"주류","sub":"맥주 / 막걸리","name":"필라이트 후레쉬 피처 1.6L[페트]","price":3900,"note":""},
+    {"id":"p266","cat":"주류","sub":"맥주 / 막걸리","name":"막걸리 750ml","price":2300,"note":"","options":["잣 막걸리","지평 막걸리"]},
+    {"id":"p268","cat":"주류","sub":"양주","name":"짐빔 200ml","price":10900,"note":"","hit":true},
+    {"id":"p269","cat":"주류","sub":"양주","name":"짐빔 500ml","price":26900,"note":""},
+    {"id":"p270","cat":"주류","sub":"양주","name":"말리부 200ml 페트","price":10200,"note":""},
+    {"id":"p271","cat":"주류","sub":"양주","name":"잭다니엘 200ml","price":17900,"note":"","options":["기본","허니","애플"]},
+    {"id":"p272","cat":"주류","sub":"양주","name":"잭다니엘 500ml","price":39400,"note":"","options":["기본","허니","애플"]},
+    {"id":"p273","cat":"주류","sub":"양주","name":"조니워커 200ml","price":19900,"note":"","options":["블랙",{"n":"레드","a":-11000}]},
+    {"id":"p275","cat":"주류","sub":"양주","name":"조니워커 500ml","price":47200,"note":"","options":["블랙",{"n":"레드","a":-24300}]},
+    {"id":"p277","cat":"주류","sub":"양주","name":"앱솔루트 375ml","price":18200,"note":"","options":["보드카",{"n":"피치","a":2300}]},
+    {"id":"p278","cat":"주류","sub":"양주","name":"앱솔루트 700ml","price":35700,"note":"","options":["보드카",{"n":"피치","a":3700}]},
+    {"id":"p279","cat":"주류","sub":"양주","name":"골든블루 사피루스 450ml","price":39000,"note":"","hit":true},
+    {"id":"p280","cat":"주류","sub":"양주","name":"골든블루 다이아몬드 450ml","price":57500,"note":""},
+    {"id":"p281","cat":"주류","sub":"양주","name":"글렌그란트 15년 700ml","price":148000,"note":""},
+    {"id":"p282","cat":"주류","sub":"와인","name":"디아블로 까베르네소비뇽 750ml","price":14900,"note":"","hit":true},
+    {"id":"p285","cat":"주류","sub":"와인","name":"1865 까베르네소비뇽","price":50000,"note":""},
+    {"id":"p286","cat":"주류","sub":"와인","name":"앙리마티스 나디아 (화이트)","price":12900,"note":""},
+    {"id":"p287","cat":"주류","sub":"와인","name":"하정우 마카끼 소비뇽블랑 750ml","price":16500,"note":""},
+    {"id":"p289","cat":"아이스크림","sub":"아이스크림","name":"콘/빵류","price":2500,"note":"","options":["월드콘","부라보콘","구구콘","붕어싸만코",{"n":"찰떡아이스","a":-300},"빵또아","바닐라빵빠레","초코빵빠레","더블비안코"]},
+    {"id":"n1795605305909","cat":"아이스크림","sub":"아이스크림","name":"쭈쭈바/얼음","price":2200,"note":"","options":[{"n":"팥빙수","a":800},{"n":"아이스가이","a":800},{"n":"설레임","a":300},{"n":"색고드름","a":800},{"n":"빠삐코","a":700},{"n":"뽕따","a":-400},{"n":"탱크보이","a":-400},"더위사냥","폴라포"]},
+    {"id":"p288","cat":"아이스크림","sub":"아이스크림","name":"스틱바","price":1500,"note":"","options":["메로나","스크류바","죠스바","수박바","돼지바","쌍쌍바","쿠앤크","옥동자","요맘때 플레인","요맘때 딸기","비비빅","누가바","와일드바디","메가톤",{"n":"엔초","a":700}]},
+    {"id":"p290","cat":"아이스크림","sub":"아이스크림","name":"하겐다즈 작은컵/스틱","price":6900,"note":"","options":["바닐라  [컵]","딸기 [컵]","초코 [컵]","녹차 [컵]","쿠앤크 [컵]","마케다미아 [컵]","바닐라 [스틱]","딸기 [스틱]","초코 [스틱]","녹차 [스틱]","쿠앤크 [스틱]","마케다미아 [스틱]"]},
+    {"id":"n1795606322654","cat":"아이스크림","sub":"아이스크림","name":"하겐다즈 큰컵","price":17900,"note":"","options":["바닐라","딸기","초코","녹차","쿠앤크","마케다미아"]},
+    {"id":"p291","cat":"아이스크림","sub":"아이스크림","name":"투게더","price":9800,"note":"","options":["투게더 바닐라","쿠앤크 그라시아"]},
+    {"id":"p292","cat":"아이스크림","sub":"아이스크림","name":"구구크러스터","price":7700,"note":""},
+    {"id":"p293","cat":"아이스크림","sub":"아이스크림","name":"엑설런트","price":11000,"note":""},
+    {"id":"p294","cat":"아이스크림","sub":"아이스크림","name":"파인애플 샤베트","price":9000,"note":""},
+    {"id":"p295","cat":"아이스크림","sub":"아이스크림","name":"요구르트 샤베트","price":9000,"note":""},
+    {"id":"n1795593633860","cat":"스낵 / 과자 / 젤리","sub":"박스과자","name":"참크래커 56g","price":1200,"note":""}
+  ];
+  const DEFAULT_SETTINGS = {"minOrder":20000,"deliveryFee":0,"freeOver":0,"bank":"카카오뱅크","account":"3333-22-3499795","holder":"김진경","order":[{"cat":"아이스크림 케이크","subs":["아이스크림 케이크"]},{"cat":"음료","subs":["커피","쥬스","탄산","이온 / 에너지","유음료","물 / 티"]},{"cat":"스낵 / 과자 / 젤리","subs":["BEST 5","봉지과자","박스과자","젤리/캔디/껌"]},{"cat":"안주 / 식사 / 라면 / 소스","subs":["안주","냉동","식사","라면 & 소스"]},{"cat":"잡화","subs":["여행 용품","미용 용품","위생용품 / 의약외품","물놀이 용품"]},{"cat":"주류","subs":["소주 / 숙취해소","맥주 / 막걸리","양주","와인"]},{"cat":"아이스크림","subs":["아이스크림"]}],"flatCats":["아이스크림 케이크","아이스크림"],"pensions":[{"n":"204 키즈 펜션","f":4000},{"n":"가인 키즈 펜션","f":4000},{"n":"가평여행 펜션","f":8000},{"n":"강변마루 펜션","f":5000},{"n":"계곡휴 펜션","f":8000},{"n":"곰사냥을 떠나자 펜션","f":8000},{"n":"구름계곡 캠핑장&펜션","f":4000},{"n":"그하루 애견 펜션","f":11000},{"n":"까르르 키즈 펜션","f":5000},{"n":"꼬망 키즈 풀빌라","f":4000},{"n":"꽃가람 펜션","f":5000},{"n":"끌레르 펜션","f":10000},{"n":"나비잠 펜션","f":4000},{"n":"너를그리다 펜션","f":10000},{"n":"넘버나인 펜션","f":10000},{"n":"노스토스 펜션","f":12000},{"n":"눈깔사탕 펜션","f":4000},{"n":"니노 키즈 펜션","f":5000},{"n":"더힐 펜션","f":7000},{"n":"도그더버디 애견 펜션","f":7000},{"n":"도토리 펜션","f":8000},{"n":"듀얼스테이포레 펜션","f":4000},{"n":"또바기 스파 글램핑","f":4000},{"n":"뚜르 키즈 풀빌라 펜션","f":10000},{"n":"로렌시아 키즈 펜션","f":10000},{"n":"로로포레 펜션","f":9000},{"n":"루아 풀빌라 펜션","f":4000},{"n":"루안 펜션","f":8000},{"n":"루체른 펜션","f":4000},{"n":"루키엘 키즈 펜션","f":9000},{"n":"르벨라 커플 펜션","f":4000},{"n":"마레 펜션","f":4000},{"n":"멍스테이 애견 펜션","f":5000},{"n":"메이드 펜션","f":4000},{"n":"모모 글램핑","f":5000},{"n":"무지개 글램핑&펜션","f":5000},{"n":"뮤위즈 풀빌라 펜션","f":4000},{"n":"미라몬티 풀빌라 펜션","f":4000},{"n":"민트322 펜션","f":6000},{"n":"반딧불 펜션","f":10000},{"n":"밤골계곡 펜션","f":4000},{"n":"백허그 캠핑장","f":7000},{"n":"밸리러브 펜션","f":4000},{"n":"별다리 글램핑","f":4000},{"n":"별비치 워터파크","f":6000},{"n":"별을 품다 펜션","f":5000},{"n":"별헤는밤 펜션","f":4000},{"n":"보니애 키즈 풀빌라 펜션","f":4000},{"n":"빌라지아 펜션","f":4000},{"n":"사랑그리기 펜션","f":4000},{"n":"셀린 펜션","f":10000},{"n":"소베라노 펜션","f":7000},{"n":"소법리푸른밤 펜션","f":5000},{"n":"솔하성월 풀빌라 펜션","f":7000},{"n":"숲속의정원 글램핑&펜션","f":4000},{"n":"슈가 글램핑&펜션","f":4000},{"n":"스카이캐슬 펜션","f":4000},{"n":"스테이 와와 펜션","f":5000},{"n":"스테이 키즈 풀빌라 펜션","f":4000},{"n":"아나힐즈 펜션","f":4000},{"n":"아띠랑스 펜션","f":6000},{"n":"아이섬 글램핑","f":5000},{"n":"아이엠101 펜션","f":8000},{"n":"아이캐슬 풀빌라 키즈 펜션","f":10000},{"n":"아인 글램핑","f":4000},{"n":"코쿤 아일랜드 펜션","f":6000},{"n":"어린왕자의나무별 펜션","f":6000},{"n":"에이스 펜션","f":5000},{"n":"에코힐링 키즈 풀빌라 펜션","f":4000},{"n":"연인산 온천 리조트","f":6000},{"n":"열두달 펜션","f":4000},{"n":"열호당 펜션","f":5000},{"n":"오드아이 키즈 풀빌라 펜션","f":4000},{"n":"오롯하다 글램핑","f":4000},{"n":"오샤 캠핑장","f":4000},{"n":"오쿨리 펜션","f":5000},{"n":"오하 펜션","f":7000},{"n":"옥 펜션","f":5000},{"n":"온더힐 펜션","f":7000},{"n":"옹기종기 펜션","f":4000},{"n":"용당스테이 펜션","f":6000},{"n":"일루 글램핑 스파","f":4000},{"n":"일마레 펜션","f":4000},{"n":"일상탈출 펜션","f":4000},{"n":"자니 애견 펜션","f":8000},{"n":"자연속공간 펜션","f":4000},{"n":"자연속에둥지 펜션","f":7000},{"n":"장사바위 계곡","f":6000},{"n":"중바위 캠핑장","f":4000},{"n":"지아 펜션","f":4000},{"n":"지희네 펜션","f":5000},{"n":"지금여기 펜션","f":5000},{"n":"채송화 하우스","f":5000},{"n":"춘향이와 방자 펜션","f":6000},{"n":"캐스트라 글램핑","f":7000},{"n":"캠핑포유 캠핑장&펜션","f":5000},{"n":"코나 펜션","f":7000},{"n":"쿨 펜션","f":4000},{"n":"코지 키즈 펜션","f":12000},{"n":"통통 키즈 풀빌라 펜션","f":7000},{"n":"파인넛 펜션","f":7000},{"n":"팡팡 독채 펜션","f":7000},{"n":"퍼니멍멍갤러시하우스 펜션","f":10000},{"n":"포시즌밸리 애견 펜션","f":9000},{"n":"포인 풀빌라 펜션","f":10000},{"n":"푸른계곡 펜션","f":9000},{"n":"풀방 펜션","f":4000},{"n":"프라도 캠핑장&펜션","f":4000},{"n":"프랜치캣 풀빌라 펜션","f":4000},{"n":"플레이38 펜션","f":4000},{"n":"하늘다리 애견 동반 펜션","f":10000},{"n":"하늘숲 스파 펜션","f":4000},{"n":"하름 펜션","f":7000},{"n":"항아리바위 계곡","f":6000},{"n":"헤테로토피아 펜션","f":5000},{"n":"화랑 캠핑장","f":4000}],"catIcons":{"아이스크림 케이크":"🎂","음료":"🥤","스낵 / 과자 / 젤리":"🍿","안주 / 식사 / 라면 / 소스":"🍢","잡화":"🧴","주류":"🔞","아이스크림":"🍦"}};
+  let API_URL = "";
+  /*P_END*/
+
+  // ===== 공통 =====
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const formatWon = n => Number(n).toLocaleString("ko-KR") + "원";
+  const hash = s => { let h = 5381; for (const c of s) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return (h >>> 0).toString(36); };
+
+  // ===== 상태 =====
+  const LS_KEY = "sevenAdminData";
+  const SV_KEY = "sevenServerCache";
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const baseHash = hash(JSON.stringify([DEFAULT_PRODUCTS, DEFAULT_SETTINGS]));
+  let PRODUCTS = clone(DEFAULT_PRODUCTS), SETTINGS = clone(DEFAULT_SETTINGS);
+  let hasLocalEdits = false;
+  try { const u = localStorage.getItem("sevenApiUrl"); if (u) API_URL = u; } catch (e) {}
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+    if (!API_URL && saved && saved.baseHash === baseHash) { PRODUCTS = saved.products; SETTINGS = { ...SETTINGS, ...saved.settings, minOrder: Math.max(MIN_ORDER_AMOUNT, Number(saved.settings?.minOrder) || 0) }; hasLocalEdits = true; }
+    else if (saved) localStorage.removeItem(LS_KEY); // 파일이 새로 올라가 반영된 경우 정리
+  } catch (e) {}
+
+  const cart = {}; // cart[상품id] = { 옵션명(없으면 ""): 수량 }
+  let activeCat = "전체", searchQuery = "", isAdmin = false, adminPin = "";
+  // 마지막으로 펼친 대분류를 같은 브라우저 탭에서 기억합니다.
+  let expandedCat = "";
+  let categoryMenuOpen = false;
+  // 현재 대분류 안에서 펼쳐진 소분류들 (검색 시 일치하는 소분류 자동 펼침)
+  let expandedSubs = new Set();
+  try {
+    const remembered = sessionStorage.getItem("sevenLastCategory") || "";
+    if (structure(false).some(o => o.cat === remembered)) expandedCat = remembered;
+  } catch (e) {}
+  // 금액/수량을 항상 숫자로 통일해 합계 계산 오류를 방지합니다.
+  const toNumber = value => {
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+    const parsed = Number(String(value ?? "").replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  let pensionSel = "", pensionOther = false;   // 손님이 고른 펜션 / '목록에 없음'
+  const pensionList = () => SETTINGS.pensions || [];
+  const baseFee = () => {                     // 펜션 목록이 있으면 펜션별 배달비, 없으면 기존 공통 배달비
+    const ps = pensionList();
+    if (ps.length) { const f = ps.find(x => x.n === pensionSel); return f && f.f != null ? toNumber(f.f) : null; }
+    const fee = toNumber(SETTINGS.deliveryFee); return fee > 0 ? fee : null;
+  };
+  const feeOf = s => { const base = baseFee(), freeOver = toNumber(SETTINGS.freeOver); return base !== null && freeOver > 0 && s >= freeOver ? 0 : base; };
+  const findP = id => PRODUCTS.find(p => String(p.id) === String(id));
+  const qtyOf = id => Object.values(cart[id] || {}).reduce((a, b) => a + Math.max(0, Math.floor(toNumber(b))), 0);
+  // 맛/옵션: "이름" 또는 {n:"이름", a:추가금}
+  const optN = o => typeof o === "string" ? { n: o, a: 0 } : o;
+  const optsOf = p => (Array.isArray(p?.options) ? p.options : []).map(optN);
+  const optPrice = (p, o) => Math.max(0, toNumber(p?.price) + toNumber((optsOf(p).find(x => x.n === o) || {}).a));
+  const addTxt = a => a ? ` (${a > 0 ? "+" : "-"}${Math.abs(a).toLocaleString("ko-KR")}원)` : "";
+  const parseOpts = t => t.split(/[,\n]/).map(s => s.trim()).filter(Boolean).map(s => {
+    const m = s.match(/^(.*?)\s*([+-])\s*(\d+)\s*원?$/);
+    return !m || !m[1] ? s : Number(m[3]) ? { n: m[1], a: (m[2] === "-" ? -1 : 1) * Number(m[3]) } : m[1];
+  });
+  let moveId = null, lastGroups = [];
+
+
+  // ===== N캔 교차할인 계산 엔진 (방식 A: 기준 수량 이상 전량 할인) =====
+  const BUNDLE_META = {
+    "4can": { label: "4캔 교차할인", req: 4 },
+    "3can": { label: "3캔 교차할인", req: 3 }
+  };
+  function getBundleUnit(p) {
+    const b = p && p.bundle;
+    if (!b || !b.group || !b.price) return null;
+    const req = Math.max(1, Math.floor(toNumber(b.req || (BUNDLE_META[b.group]?.req || 4))));
+    return { group: b.group, req, price: toNumber(b.price), unit: Math.round(toNumber(b.price) / req) };
+  }
+  function getBundleStates() {
+    const counts = {}, rawTotals = {}, discTotals = {};
+    Object.entries(cart).forEach(([id, options]) => {
+      const p = findP(id), bu = getBundleUnit(p);
+      if (!bu || !options || typeof options !== "object") return;
+      Object.entries(options).forEach(([optName, rawQty]) => {
+        const qty = Math.max(0, Math.floor(toNumber(rawQty)));
+        if (!qty) return;
+        const g = bu.group;
+        counts[g] = (counts[g] || 0) + qty;
+        rawTotals[g] = (rawTotals[g] || 0) + qty * optPrice(p, optName);
+        discTotals[g] = (discTotals[g] || 0) + qty * bu.unit;
+      });
+    });
+    const out = {};
+    Object.keys(counts).forEach(g => {
+      const req = BUNDLE_META[g]?.req || 4;
+      const qty = counts[g];
+      const active = qty >= req;
+      const saving = Math.max(0, rawTotals[g] - discTotals[g]);
+      out[g] = { group: g, label: BUNDLE_META[g]?.label || `${req}캔 교차할인`, req, qty, active, remain: Math.max(0, req - qty), saving };
+    });
+    return out;
+  }
+  function getLinePricing(p, optionName, bundleStates) {
+    const rawUnit = optPrice(p, optionName);
+    const bu = getBundleUnit(p);
+    if (!bu) return { rawUnit, unit: rawUnit, discounted: false, bundle: null };
+    const st = (bundleStates || getBundleStates())[bu.group];
+    if (st && st.active && bu.unit < rawUnit) {
+      return { rawUnit, unit: bu.unit, discounted: true, bundle: bu };
+    }
+    return { rawUnit, unit: rawUnit, discounted: false, bundle: bu };
+  }
+  function renderBundleBanner(bundleStates) {
+    const entries = Object.values(bundleStates || getBundleStates());
+    if (!entries.length) return "";
+    const allOk = entries.every(s => s.active);
+    return `<div class="bundle-banner ${allOk ? "ok" : ""}">` + entries.map(s =>
+      s.active
+        ? `<div class="bundle-line"><span>🎉 <b>${esc(s.label)}</b> 적용 중 (${s.qty}캔)</span><span class="bundle-pill">-${formatWon(s.saving)} 할인</span></div>`
+        : `<div class="bundle-line"><span>🍺 <b>${esc(s.label)}</b>까지 <b>${s.remain}캔</b> 남았어요 (${s.qty}/${s.req}캔)</span><span class="bundle-pill">담으면 -${formatWon(s.saving)}</span></div>`
+    ).join("") + `</div>`;
+  }
+
+  function setQty(id, opt, n) {
+    if (!id) return;
+    const quantity = Math.max(0, Math.floor(toNumber(n)));
+    if (!cart[id]) cart[id] = {};
+    if (quantity === 0) delete cart[id][opt];
+    else cart[id][opt] = quantity;
+    if (!Object.keys(cart[id]).length) delete cart[id];
+  }
+  function saveProducts() {
+    if (API_URL) pushServer();
+    else { try { localStorage.setItem(LS_KEY, JSON.stringify({ baseHash, products: PRODUCTS, settings: SETTINGS })); } catch (e) {} hasLocalEdits = true; }
+    refresh();
+    if (isAdmin) showAdminBar();
+  }
+
+  // ===== 화면 =====
+  const catIcon = c => ((SETTINGS.catIcons || {})[c] || "").trim();
+  let shownCat = "";
+  function renderTabs() {
+    const cats = structure(false).map(o => o.cat);
+    if (expandedCat && !cats.includes(expandedCat)) expandedCat = "";
+    const count = cat => PRODUCTS.filter(p => p.cat === cat).reduce((sum, p) => sum + qtyOf(p.id), 0);
+    const box = $("categoryTabs"), prevLeft = box.scrollLeft;
+    box.innerHTML = cats.map(c => {
+      const n = count(c);
+      return `<button type="button" class="cat-chip ${c === expandedCat ? "active" : ""}" data-cat="${esc(c)}">${catIcon(c) ? `<span class="cat-ico">${esc(catIcon(c))}</span>` : ""}${esc(c)}${n ? `<span class="cat-badge">${n}</span>` : ""}</button>`;
+    }).join("");
+    box.scrollLeft = prevLeft;
+    if (expandedCat !== shownCat) { // 카테고리가 바뀌었을 때만 선택된 버튼이 가운데 오도록 이동
+      shownCat = expandedCat;
+      const el = box.querySelector(".cat-chip.active");
+      if (el) { const r = el.getBoundingClientRect(), t = box.getBoundingClientRect(); box.scrollLeft += (r.left + r.width / 2) - (t.left + t.width / 2); }
+    }
+  }
+
+  function renderProducts() {
+    const q = searchQuery.trim().toLowerCase();
+    const groups = new Map();
+
+    if (q && !expandedCat) {
+      const first = PRODUCTS.find(p =>
+        [p.name, p.note, p.sub, ...optsOf(p).map(x => x.n)].join(" ").toLowerCase().includes(q)
+      );
+      if (first) expandedCat = first.cat;
+    }
+
+    if (!expandedCat) {
+      $("productList").innerHTML = q
+        ? `<div class="empty-state">검색 결과가 없습니다.</div>`
+        : `<div class="category-empty">상품을 보려면 위에서 원하는 카테고리를 선택해 주세요.</div>`;
+      return;
+    }
+
+    PRODUCTS.forEach(p => {
+      if (p.cat !== expandedCat) return;
+      if (q && ![p.name, p.note, p.sub, ...optsOf(p).map(x => x.n)].join(" ").toLowerCase().includes(q)) return;
+      if (!groups.has(p.sub)) groups.set(p.sub, []);
+      groups.get(p.sub).push(p);
+    });
+    if (!groups.size) {
+      $("productList").innerHTML = `<div class="empty-state">검색 결과가 없습니다.</div>`;
+      return;
+    }
+
+    // 검색 중에는 검색 결과가 있는 모든 소분류를 자동으로 펼칩니다.
+    if (q) expandedSubs = new Set(groups.keys());
+
+    let html = ""; lastGroups = [];
+    const moving = isAdmin && moveId;
+    const flat = isFlat(expandedCat);
+    let orderedSubs = structure(false).find(o => o.cat === expandedCat)?.subs || [...groups.keys()];
+    if (flat) { const all = orderedSubs.filter(s => groups.has(s)).flatMap(s => groups.get(s)); groups.clear(); groups.set("", all); orderedSubs = [""]; }
+
+    const bStates = getBundleStates();
+    html += renderBundleBanner(bStates);
+    html += `<div class="category-content"><div class="subcategory-list">`;
+    orderedSubs.filter(sub => groups.has(sub)).forEach(sub => {
+      const items = groups.get(sub);
+      const gi = lastGroups.push([expandedCat, flat ? items[items.length - 1].sub : sub]) - 1;
+      const opened = flat || expandedSubs.has(sub);
+      const subCartCount = PRODUCTS
+        .filter(p => p.cat === expandedCat && p.sub === sub)
+        .reduce((sum, p) => sum + qtyOf(p.id), 0);
+
+      html += `<section class="subcategory-block${flat ? " flat" : ""}">${flat ? "" : `
+        <button type="button" class="subcategory-head ${opened ? "active" : ""}"
+          data-sub-toggle="${esc(sub)}" aria-expanded="${opened}">
+          <span class="subcategory-head-left">
+            <span>${esc(sub)}</span>
+            <span class="subcategory-count">상품 ${items.length}개</span>
+            ${subCartCount ? `<span class="subcategory-count">장바구니 ${subCartCount}개</span>` : ""}
+          </span>
+          <span class="subcategory-arrow">${opened ? "접기 ▲" : "펼치기 ▼"}</span>
+        </button>`}`;
+
+      if (opened) {
+        html += `<div class="subcategory-content">`;
+        items.forEach(p => {
+          if (moving && p.id !== moveId) html += `<button class="slot" data-act="slot" data-before="${p.id}">▼ 여기로 이동</button>`;
+          const n = qtyOf(p.id), hasOpt = p.options && p.options.length;
+          const picked = Object.entries(cart[p.id] || {}).map(([o, c]) => `${o} ×${c}`).join(", ");
+          let ctrl;
+          if (p.soldOut) ctrl = `<span class="soldout-tag">품절</span>`;
+          else if (hasOpt) ctrl = `<button class="opt-btn ${n ? "on" : ""}" data-act="opt" data-id="${p.id}">${n ? n + "개 선택됨" : "맛 선택"}</button>`;
+          else ctrl = `<div class="qty-box"><button class="qty-btn" data-act="minus" data-id="${p.id}">-</button><span class="qty-num">${n}</span><button class="qty-btn plus" data-act="plus" data-id="${p.id}">+</button></div>`;
+          html += `
+          <div class="item-card ${n ? "selected" : ""} ${p.soldOut ? "sold" : ""} ${p.id === moveId ? "moving" : ""}">
+            <div class="item-info">
+              <div class="item-name">${esc(p.name)}${p.hit ? '<span class="hit-tag">HIT</span>' : ""}${(() => { const bu = getBundleUnit(p); if (!bu) return ""; const active = bStates[bu.group]?.active; return `<span class="bundle-tag ${bu.req === 3 ? "b3" : "b4"}${active ? " applied" : ""}">${bu.req}캔 ${formatWon(bu.price)} · 캔당 ${formatWon(bu.unit)}</span>`; })()}</div>
+              ${p.note ? `<div class="item-note">${esc(p.note)}</div>` : ""}
+              ${hasOpt && !picked ? `<div class="item-note">${optsOf(p).map(x => esc(x.n) + addTxt(x.a)).join(" · ")}</div>` : ""}
+              ${picked ? `<div class="item-picked">${esc(picked)}</div>` : ""}
+              <div class="item-price">${(() => { const lp = getLinePricing(p, "", bStates); return lp.discounted ? `<span class="price-strike">${formatWon(lp.rawUnit)}</span><span class="price-sale">${formatWon(lp.unit)}</span> <span>(교차할인 적용)</span>` : `${formatWon(p.price)}${optsOf(p).some(x => x.a) ? "<span> 기본가</span>" : ""}`; })()}</div>
+              ${isAdmin ? `<div class="admin-row"><button data-act="move" data-id="${p.id}">↕ 이동</button><button data-act="up" data-id="${p.id}">▲</button><button data-act="down" data-id="${p.id}">▼</button><button data-act="edit" data-id="${p.id}">✏️ 수정</button><button data-act="del" data-id="${p.id}">🗑</button></div>` : ""}
+            </div>
+            ${ctrl}
+          </div>`;
+        });
+        if (moving && !(items.length === 1 && items[0].id === moveId)) html += `<button class="slot" data-act="slot" data-endg="${gi}">▼ 이 그룹 맨 끝으로</button>`;
+        html += `</div>`;
+      }
+      html += `</section>`;
+    });
+    html += `</div></div>`;
+    $("productList").innerHTML = html;
+  }
+
+  function getCartSummary() {
+    let cnt = 0, rawSum = 0, sum = 0;
+    const bStates = getBundleStates();
+    Object.entries(cart).forEach(([id, options]) => {
+      const p = findP(id);
+      if (!p || !options || typeof options !== "object") return;
+      Object.entries(options).forEach(([optionName, rawQty]) => {
+        const qty = Math.max(0, Math.floor(toNumber(rawQty)));
+        if (!qty) return;
+        const lp = getLinePricing(p, optionName, bStates);
+        cnt += qty;
+        rawSum += qty * lp.rawUnit;
+        sum += qty * lp.unit;
+      });
+    });
+    rawSum = Math.round(rawSum);
+    sum = Math.round(sum);
+    return { cnt, rawSum, discount: Math.max(0, rawSum - sum), sum, bStates };
+  }
+  function updateBottomBar() {
+    const { cnt, sum } = getCartSummary();
+    $("cartSummaryText").textContent = `담은 상품 ${cnt}개`;
+    $("cartBadge").textContent = cnt > 99 ? "99+" : cnt; $("cartBadge").hidden = !cnt;
+    const S = SETTINGS, minOrder = Math.max(MIN_ORDER_AMOUNT, toNumber(S.minOrder)), below = cnt === 0 || sum < minOrder, fee = feeOf(sum);
+    $("cartTotalPrice").textContent = formatWon(sum);
+    document.querySelectorAll(".tmin").forEach(el => { el.textContent = minOrder % 10000 === 0 ? (minOrder / 10000) + "만원" : formatWon(minOrder); });
+    const { discount, bStates } = getCartSummary();
+    const pendingB = Object.values(bStates).find(s => !s.active);
+    const discNote = discount ? ` · 교차할인 -${formatWon(discount)}` : (pendingB ? ` · ${pendingB.label} ${pendingB.remain}캔 남음` : "");
+    $("cartHint").textContent = !cnt ? (S.minOrder ? `최소 주문금액 ${formatWon(minOrder)}` : "")
+      : below ? `최소 주문금액까지 ${formatWon(minOrder - sum)} 남았어요${discNote}`
+      : fee === null ? (pensionList().length && !pensionSel && !pensionOther ? `🛵 장바구니에서 펜션을 고르면 배달비가 계산돼요${discNote}` : (discount ? `🎉 교차할인 -${formatWon(discount)} 적용 중` : "")) : fee === 0 ? `🎉 배달비 무료${discNote} · 최종 ${formatWon(sum)}` : `배달비 ${formatWon(fee)}${discNote} · 최종 ${formatWon(sum + fee)}` + (S.freeOver ? ` · ${formatWon(S.freeOver - sum)} 더 담으면 무료!` : "");
+    $("openOrderBtn").disabled = cnt === 0 || !!below;
+  }
+  function refresh() { renderTabs(); renderProducts(); updateBottomBar(); renderPensionUI(); if (cartReady) saveCart(); }
+
+  // ===== 맛/옵션 선택창 =====
+  let optId = null, tmp = {};
+  function openOpt(id) { optId = id; tmp = { ...(cart[id] || {}) }; renderOpt(); $("optModal").classList.add("open"); }
+  function renderOpt() {
+    const p = findP(optId);
+    $("optTitle").textContent = `${p.name} · 기본가 ${formatWon(p.price)}`;
+    $("optList").innerHTML = optsOf(p).map((ob, i) => {
+      const o = ob.n, q = tmp[o] || 0;
+      return `<div class="opt-row ${q ? "checked" : ""}"><label><input type="checkbox" data-i="${i}" ${q ? "checked" : ""}><span>${esc(o)}<small class="addp">${addTxt(ob.a)}</small></span></label>` +
+        (q ? `<div class="qty-box"><button class="qty-btn" data-i="${i}" data-d="-1">-</button><span class="qty-num">${q}</span><button class="qty-btn plus" data-i="${i}" data-d="1">+</button></div>` : "") + `</div>`;
+    }).join("");
+  }
+  $("optList").addEventListener("change", e => {
+    const o = optsOf(findP(optId))[e.target.dataset.i].n;
+    if (e.target.checked) tmp[o] = 1; else delete tmp[o];
+    renderOpt();
+  });
+  $("optList").addEventListener("click", e => {
+    const b = e.target.closest("button[data-d]"); if (!b) return;
+    const o = optsOf(findP(optId))[b.dataset.i].n;
+    const n = (tmp[o] || 0) + Number(b.dataset.d);
+    if (n <= 0) delete tmp[o]; else tmp[o] = n;
+    renderOpt();
+  });
+  $("optClose").addEventListener("click", () => $("optModal").classList.remove("open"));
+  $("optDone").addEventListener("click", () => {
+    delete cart[optId];
+    Object.entries(tmp).forEach(([o, q]) => setQty(optId, o, q));
+    $("optModal").classList.remove("open");
+    refresh();
+  });
+
+  // ===== 목록 클릭 / 탭 / 검색 =====
+  $("categoryTabs").addEventListener("click", e => {
+    const toggle = e.target.closest("[data-category-toggle]");
+    if (toggle) {
+      categoryMenuOpen = true;
+      refresh();
+      return;
+    }
+    const b = e.target.closest("[data-cat]");
+    if (!b) return;
+    expandedCat = b.dataset.cat;
+    activeCat = expandedCat;
+    expandedSubs = new Set();
+    categoryMenuOpen = false;
+    try { sessionStorage.setItem("sevenLastCategory", expandedCat); } catch (e) {}
+    searchQuery = ""; $("searchInput").value = "";
+    refresh();
+    window.scrollTo({ top: document.querySelector("header").offsetHeight });
+  });
+  $("searchInput").addEventListener("input", e => {
+    searchQuery = e.target.value;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const match = PRODUCTS.find(p =>
+        [p.name, p.note, p.sub, ...optsOf(p).map(x => x.n)].join(" ").toLowerCase().includes(q)
+      );
+      expandedCat = match ? match.cat : "";
+      activeCat = expandedCat || "전체";
+      expandedSubs = new Set();
+      if (match) {
+        const matchedSubs = new Set(PRODUCTS.filter(p =>
+          p.cat === match.cat &&
+          [p.name, p.note, p.sub, ...optsOf(p).map(x => x.n)].join(" ").toLowerCase().includes(q)
+        ).map(p => p.sub));
+        expandedSubs = matchedSubs;
+      }
+      categoryMenuOpen = false;
+      if (expandedCat) {
+        try { sessionStorage.setItem("sevenLastCategory", expandedCat); } catch (e) {}
+      }
+    } else {
+      expandedCat = "";
+      activeCat = "전체";
+      expandedSubs = new Set();
+    }
+    refresh();
+  });
+  $("productList").addEventListener("click", e => {
+    const subToggle = e.target.closest("[data-sub-toggle]");
+    if (subToggle) {
+      const sub = subToggle.dataset.subToggle;
+      if (expandedSubs.has(sub)) expandedSubs.delete(sub);
+      else expandedSubs.add(sub);
+      renderProducts();
+      return;
+    }
+    const b = e.target.closest("button[data-act]"); if (!b) return;
+    const id = b.dataset.id, act = b.dataset.act, p = findP(id);
+    if (act === "plus") setQty(id, "", qtyOf(id) + 1);
+    else if (act === "minus") setQty(id, "", qtyOf(id) - 1);
+    else if (act === "opt") return openOpt(id);
+    else if (act === "move") return setMove(id);
+    else if (act === "up" || act === "down") return nudge(id, act === "up" ? -1 : 1);
+    else if (act === "slot") return moveTo(b.dataset.before, b.dataset.endg);
+    else if (act === "edit") return openEdit(id);
+    else if (act === "del") {
+      if (confirm(`"${p.name}" 을(를) 삭제할까요?`)) { PRODUCTS = PRODUCTS.filter(x => x.id !== id); delete cart[id]; saveProducts(); }
+      return;
+    }
+    refresh();
+  });
+
+  // ===== 주문서 =====
+  function buildOrderText() {
+    const room = $("pensionInput").value.trim(), hasPen = pensionList().length > 0;
+    const pension = hasPen && pensionSel ? `${pensionSel} ${room}`.trim() : room || (hasPen ? "(펜션 미선택)" : "(펜션명/호수 미입력)");
+    const memo = $("memoInput").value.trim();
+    const lines = ["[세븐편의점 배달 주문서]", `■ 배달장소: ${pension}`];
+    if (memo) lines.push(`■ 연락처: ${memo}`);
+    lines.push("------------------------");
+    const bStates = getBundleStates();
+    let total = 0, rawTotal = 0;
+    Object.entries(cart).forEach(([id, m]) => {
+      const p = findP(id); if (!p) return;
+      Object.entries(m).forEach(([o, q]) => {
+        const quantity = Math.max(0, Math.floor(toNumber(q)));
+        if (!quantity) return;
+        const lp = getLinePricing(p, o, bStates), lineTotal = lp.unit * quantity;
+        total += lineTotal;
+        rawTotal += lp.rawUnit * quantity;
+        const tag = lp.discounted ? ` (${lp.bundle.req}캔할인 @${formatWon(lp.unit)})` : "";
+        lines.push(`• ${p.name}${o ? " [" + o + "]" : ""} x ${quantity}개 = ${formatWon(lineTotal)}${tag}`);
+      });
+    });
+    const disc = Math.max(0, rawTotal - total);
+    const tobacco = $("tobaccoInput").value.trim();
+    if (tobacco) lines.push("------------------------", "🚬 담배 요청 (선택 · 최소주문금액 미포함)", tobacco, "※ 담배 재고·금액은 확인 후 안내 부탁드립니다.");
+    const fee = feeOf(total);
+    lines.push("------------------------");
+    if (disc > 0) lines.push(`■ 정가 합계: ${formatWon(rawTotal)}`, `■ 교차할인: -${formatWon(disc)}`);
+    if (fee === null) lines.push(`■ 상품 합계: ${formatWon(total)} (배달비 별도)`, "※ 물품 확인 후 배달비 포함 총 금액 안내 부탁드립니다.");
+    else lines.push(`■ 상품 합계: ${formatWon(total)}`, `■ 배달비: ${fee ? formatWon(fee) : "무료"}${pensionSel ? " (" + pensionSel + ")" : ""}`, `■ 최종 금액: ${formatWon(total + fee)}${tobacco ? " (담배 제외)" : ""}`, "※ 물품 확인 후 최종 금액 안내 부탁드립니다.");
+    return lines.join("\n");
+  }
+  const refreshPreview = () => { $("orderPreviewText").textContent = buildOrderText(); };
+  async function copyOrderText() {
+    const text = buildOrderText();
+    try { await navigator.clipboard.writeText(text); return true; }
+    catch (e) {
+      const ta = document.createElement("textarea"); ta.value = text;
+      ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      let copied = false; try { copied = document.execCommand("copy"); } catch (_) {}
+      document.body.removeChild(ta); return copied;
+    }
+  }
+  async function copyText(t) {
+    try { await navigator.clipboard.writeText(t); }
+    catch (e) { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); }
+  }
+  function renderAcct() {
+    const S = SETTINGS, box = $("acctBox");
+    box.style.display = S.account ? "flex" : "none";
+    box.innerHTML = S.account ? `<div><small>최종 금액 안내를 받은 뒤 입금해 주세요</small><br><b>${esc(S.bank)} ${esc(S.account)}</b>${S.holder ? " (" + esc(S.holder) + ")" : ""}</div><button id="copyAcctBtn">계좌 복사</button>` : "";
+  }
+  $("acctBox").addEventListener("click", async e => {
+    if (!e.target.closest("#copyAcctBtn")) return;
+    await copyText(SETTINGS.account.replace(/\D/g, ""));
+    alert("계좌번호(숫자만)가 복사되었습니다.");
+  });
+  function meetsMinimumOrder() {
+    const { sum } = getCartSummary();
+    const minimum = Math.max(MIN_ORDER_AMOUNT, toNumber(SETTINGS.minOrder));
+    if (sum < minimum) { alert(`최소 주문금액은 ${formatWon(minimum)}입니다. (담배 제외)\n현재 상품 금액은 ${formatWon(sum)}이며, ${formatWon(minimum - sum)}을(를) 더 담아 주세요.`); return false; }
+    return true;
+  }
+  $("openOrderBtn").addEventListener("click", () => { if (!meetsMinimumOrder()) return; refreshPreview(); renderAcct(); renderPensionUI(); $("orderModal").classList.add("open"); });
+  $("closeModalBtn").addEventListener("click", () => $("orderModal").classList.remove("open"));
+  $("pensionInput").addEventListener("input", refreshPreview);
+  $("memoInput").addEventListener("input", refreshPreview);
+  $("tobaccoInput").addEventListener("input", refreshPreview);
+  function orderFormOk() {
+    if (!meetsMinimumOrder()) return false;
+    if (pensionList().length && !pensionSel && !pensionOther) { alert("배달받으실 펜션을 선택해 주세요!"); openPensionPicker(); return false; }
+    if (!$("pensionInput").value.trim()) { alert(pensionList().length && !pensionOther ? "객실 호수를 입력해 주세요! (예: 201호)" : "배달받으실 펜션명과 객실호수를 입력해 주세요!"); $("pensionInput").focus(); return false; }
+    const digits = $("memoInput").value.replace(/\D/g, "");
+    if (digits.length < 9) { alert("연락 가능한 연락처를 입력해 주세요! (예: 010-1234-5678)"); $("memoInput").focus(); return false; }
+    return true;
+  }
+  $("copyOnlyBtn").addEventListener("click", async () => {
+    if (!orderFormOk()) return;
+    if (!(await copyOrderText())) { alert("주문서 자동 복사에 실패했습니다. 다시 시도해 주세요."); return; }
+    completeOrder();
+    alert("주문서가 복사되었습니다! 카카오톡 채팅창에 붙여넣기 해주세요.");
+  });
+  $("copyAndKakaoBtn").addEventListener("click", async () => {
+    if (!orderFormOk()) return;
+    const copied = await copyOrderText();
+    if (!copied) {
+      alert("주문서 자동 복사에 실패했습니다. 주문서 텍스트만 복사 버튼을 이용해 주세요.");
+      return;
+    }
+    completeOrder();                             // 이동하기 전에 먼저 비우고 저장
+    alert("주문서가 복사되었습니다. 카카오톡 채팅창에서 입력칸을 길게 눌러 붙여넣은 뒤 전송해 주세요.");
+    window.location.href = KAKAO_CHAT_URL;
+  });
+
+  // ===== 숨겨진 관리자 모드 =====
+  // 진입: 상단 [7-ELEVEN] 로고/제목을 3초 안에 5번 연속 터치 → PIN 입력
+  let taps = [];
+  $("brand").addEventListener("click", () => {
+    const now = Date.now(); taps = taps.filter(t => now - t < 3000); taps.push(now);
+    if (taps.length < 5) return;
+    taps = [];
+    if (isAdmin) return exitAdmin();
+    const pin = prompt("관리자 PIN을 입력하세요");
+    if (pin === null) return;
+    if (hash(pin) !== ADMIN_PIN_HASH) return alert("PIN이 맞지 않습니다.");
+    adminPin = pin; isAdmin = true; document.body.classList.add("admin"); showAdminBar(); refresh();
+  });
+  function exitAdmin() {
+    moveId = null; if ($("moveBar")) $("moveBar").remove();
+    isAdmin = false; document.body.classList.remove("admin");
+    const b = $("adminBar"); if (b) b.remove();
+    refresh();
+  }
+  function showAdminBar() {
+    let bar = $("adminBar");
+    if (!bar) { bar = document.createElement("div"); bar.id = "adminBar"; bar.dataset.admin = ""; document.body.prepend(bar); }
+    const note = API_URL
+      ? (svStatus || (serverEmpty ? "서버가 비어 있어요 → ☁️ 서버 저장을 눌러 현재 품목을 올려 주세요" : "☁️ 서버 연결됨 — 수정하면 손님 화면에 바로 반영돼요"))
+      : (hasLocalEdits ? "● 이 기기에만 저장됨 → 💾 파일 저장 후 호스팅 교체 필요" : "서버 미연결 — ⚙ 설정에 서버 주소를 넣으면 바로 반영돼요");
+    bar.innerHTML = `<b>🔧 관리자</b><button data-a="add">＋ 품목</button><button data-a="cats">🗂 분류</button><button data-a="pensions">🏨 펜션</button><button data-a="settings">⚙ 설정</button>` +
+      (API_URL ? `<button data-a="push">☁️ 서버 저장</button>` : `<button data-a="reset">↺ 변경 취소</button>`) +
+      `<button data-a="export">💾 파일</button><button data-a="exit">종료</button><span class="dirty" style="flex-basis:100%">${note}</span>`;
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("#adminBar button"); if (!b) return;
+    const a = b.dataset.a;
+    if (a === "add") openEdit(null);
+    else if (a === "cats") openCats();
+    else if (a === "pensions") openPensions();
+    else if (a === "settings") openSettings();
+    else if (a === "push") pushServer();
+    else if (a === "export") exportHtml();
+    else if (a === "exit") exitAdmin();
+    else if (a === "reset" && confirm("이 기기에서 수정한 내용을 모두 취소하고 원래 파일 상태로 되돌릴까요?")) {
+      try { localStorage.removeItem(LS_KEY); } catch (e) {}
+      PRODUCTS = clone(DEFAULT_PRODUCTS); SETTINGS = clone(DEFAULT_SETTINGS); hasLocalEdits = false;
+      refresh(); showAdminBar();
+    }
+  });
+
+  function openEdit(id) {
+    const p = id ? findP(id) : { cat: activeCat !== "전체" ? activeCat : "", sub: "", name: "", price: "", note: "", options: [] };
+    let m = $("editModal");
+    if (!m) { m = document.createElement("div"); m.id = "editModal"; m.className = "modal-backdrop"; m.dataset.admin = ""; document.body.appendChild(m); }
+    const dl = (name, key) => `<datalist id="${name}">${[...new Set(PRODUCTS.map(x => x[key]))].map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
+    m.dataset.id = id || "";
+    m.innerHTML = `<div class="modal"><div class="modal-header"><h2>${id ? "품목 수정" : "품목 추가"}</h2><button class="close-btn" data-e="close">×</button></div>
+      ${dl("dlCat", "cat")}${dl("dlSub", "sub")}
+      <div class="field-group"><label>대분류 (탭 이름)</label><input id="eCat" list="dlCat" value="${esc(p.cat)}"></div>
+      <div class="field-group"><label>소분류 (목록 제목 · '소분류 안 씀' 대분류는 비워도 돼요)</label><input id="eSub" list="dlSub" value="${esc(p.sub)}"></div>
+      <div class="field-group"><label>상품명</label><input id="eName" value="${esc(p.name)}"></div>
+      <div class="field-group"><label>단품 정가 (원)</label><input id="ePrice" type="number" inputmode="numeric" value="${esc(p.price)}"></div>
+      <div class="field-group"><label>교차할인 그룹</label><select id="eBGroup"><option value="">행사 없음</option><option value="4can" ${(p.bundle?.group === "4can") ? "selected" : ""}>4캔 교차할인 (4캔 이상)</option><option value="3can" ${(p.bundle?.group === "3can") ? "selected" : ""}>3캔 교차할인 (3캔 이상)</option></select></div>
+      <div class="field-group"><label>묶음 행사가 (원 · 예: 11000 / 12000 / 13000)</label><input id="eBPrice" type="number" inputmode="numeric" value="${esc(p.bundle?.price || "")}" placeholder="예: 12000 (비우면 행사 없음)"></div>
+      <div class="field-group"><label>설명 (선택)</label><input id="eNote" value="${esc(p.note)}"></div>
+      <div class="field-group"><label>맛/옵션 (한 줄에 하나 · 추가금은 이름 뒤에 +300 / -200)</label><textarea id="eOpts" style="min-height:130px" placeholder="예)&#10;신라면&#10;불닭볶음면 +300&#10;너구리 -100">${esc(optsOf(p).map(x => x.n + (x.a ? " " + (x.a > 0 ? "+" : "") + x.a : "")).join("\n"))}</textarea></div>
+      <div class="check-line"><label><input type="checkbox" id="eHit" ${p.hit ? "checked" : ""}> HIT 표시</label><label><input type="checkbox" id="eSold" ${p.soldOut ? "checked" : ""}> 품절</label></div>
+      <button class="btn-kakao" style="background:var(--primary);color:#fff" data-e="save">저장</button></div>`;
+    m.classList.add("open");
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("#editModal [data-e]"); if (!b) return;
+    const m = $("editModal");
+    if (b.dataset.e === "close") return m.classList.remove("open");
+    const v = i => $(i).value.trim();
+    let subV = v("eSub");
+    if (!subV && isFlat(v("eCat"))) { const cur = findP(m.dataset.id); subV = (cur && cur.cat === v("eCat") ? cur.sub : (PRODUCTS.find(x => x.cat === v("eCat")) || {}).sub) || "기본"; }
+    if (!v("eCat") || !subV || !v("eName")) return alert("대분류, 소분류, 상품명은 꼭 입력해 주세요. (소분류는 '소분류 안 씀'으로 설정한 대분류에서만 비울 수 있어요)");
+    const bGroup = $("eBGroup").value, bPrice = parseInt($("eBPrice").value) || 0;
+    const d = { cat: v("eCat"), sub: subV, name: v("eName"), price: parseInt(v("ePrice")) || 0, note: v("eNote"),
+      options: parseOpts(v("eOpts")), hit: $("eHit").checked, soldOut: $("eSold").checked };
+    if (bGroup && bPrice > 0) d.bundle = { group: bGroup, req: BUNDLE_META[bGroup]?.req || 4, price: bPrice };
+    if (!d.options.length) delete d.options;
+    if (!d.hit) delete d.hit;
+    if (!d.soldOut) delete d.soldOut;
+    const id = m.dataset.id;
+    if (id) { const p = findP(id); Object.keys(p).forEach(k => { if (k !== "id") delete p[k]; }); Object.assign(p, d); delete cart[id]; }
+    else PRODUCTS.push({ id: "n" + Date.now(), ...d });
+    m.classList.remove("open");
+    saveProducts();
+  });
+
+  // ===== 품목 이동: [↕ 이동] → 원하는 위치의 [여기로 이동] 터치 =====
+  function setMove(id) {
+    moveId = id;
+    let bar = $("moveBar");
+    if (!id) { if (bar) bar.remove(); return renderProducts(); }
+    if (!bar) { bar = document.createElement("div"); bar.id = "moveBar"; bar.dataset.admin = ""; document.body.appendChild(bar); }
+    bar.innerHTML = `<div><b>↕ 이동 중:</b> ${esc(findP(id).name)}<br><small>옮길 위치의 [▼ 여기로 이동]을 누르세요. 다른 대분류로 보내려면 위 탭을 바꿔서 고르세요.</small></div><div class="mv-btns"><button data-m="newg">＋ 새 그룹</button><button data-m="cancel">취소</button></div>`;
+    renderProducts();
+  }
+  function place(cat, sub, before) {
+    const p = findP(moveId);
+    PRODUCTS = PRODUCTS.filter(x => x !== p);
+    p.cat = cat; p.sub = sub;
+    let at = before ? PRODUCTS.indexOf(before) : -1;
+    if (!before) {
+      PRODUCTS.forEach((x, i) => { if (x.cat === cat && x.sub === sub) at = i; });
+      if (at < 0) PRODUCTS.forEach((x, i) => { if (x.cat === cat) at = i; });
+      at = at < 0 ? PRODUCTS.length : at + 1;
+    }
+    PRODUCTS.splice(at, 0, p);
+    setMove(null); saveProducts();
+  }
+  function moveTo(beforeId, g) {
+    if (beforeId) { const t = findP(beforeId); place(t.cat, t.sub, t); }
+    else { const [c, s] = lastGroups[g]; place(c, s, null); }
+  }
+  function nudge(id, d) {
+    const i = PRODUCTS.findIndex(x => x.id === id), p = PRODUCTS[i];
+    let j = i + d;
+    while (j >= 0 && j < PRODUCTS.length && (PRODUCTS[j].cat !== p.cat || PRODUCTS[j].sub !== p.sub)) j += d;
+    if (j < 0 || j >= PRODUCTS.length) return;
+    [PRODUCTS[i], PRODUCTS[j]] = [PRODUCTS[j], PRODUCTS[i]];
+    saveProducts();
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("#moveBar button"); if (!b) return;
+    if (b.dataset.m === "cancel") return setMove(null);
+    const p = findP(moveId);
+    const cat = prompt("어느 대분류(탭)에 만들까요?", p.cat); if (!cat || !cat.trim()) return;
+    const sub = prompt("새 그룹 이름(소분류)을 입력하세요"); if (!sub || !sub.trim()) return;
+    place(cat.trim(), sub.trim(), null);
+  });
+
+  // 현재 품목으로 새 index.html 파일을 만들어 다운로드
+  function exportHtml() {
+    const s = $("mainScript").textContent;
+    const a = s.indexOf("/*P_START*/") + 11, b = s.indexOf("/*P_END*/");
+    const body = "\n  const DEFAULT_PRODUCTS = [\n" + PRODUCTS.map(p => "    " + JSON.stringify(p)).join(",\n") + "\n  ];\n  const DEFAULT_SETTINGS = " + JSON.stringify(SETTINGS) + ";\n  let API_URL = " + JSON.stringify(API_URL) + ";\n  ";
+    const root = document.documentElement.cloneNode(true);
+    root.querySelectorAll("[data-admin]").forEach(n => n.remove());
+    ["categoryTabs", "productList", "orderPreviewText", "optList", "acctBox", "cartHint", "cartBody", "cartFoot", "orderSum", "pensionList"].forEach(id => { root.querySelector("#" + id).innerHTML = ""; });
+    root.querySelector("#acctBox").style.display = "none";
+    root.querySelectorAll(".open").forEach(n => n.classList.remove("open"));
+    root.querySelector("body").removeAttribute("class");
+    root.querySelector("#mainScript").textContent = s.slice(0, a) + body + s.slice(b);
+    const blob = new Blob(["<!DOCTYPE html>\n" + root.outerHTML], { type: "text/html" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob); link.download = "index.html";
+    document.body.appendChild(link); link.click(); link.remove();
+    alert("index.html 이 저장되었습니다.\n호스팅에 이 파일을 올려 기존 파일과 교체하면 손님 화면에도 반영됩니다.");
+  }
+
+  // ===== 분류(대분류/소분류) 구조 =====
+  // SETTINGS.order = [{cat, subs:[...]}] 가 있으면 그 순서대로, 없는 분류는 뒤에 자동으로 붙어요
+  const isFlat = c => (SETTINGS.flatCats || []).includes(c); // 소분류 없이 보여주는 대분류
+  function structure(withEmpty) {
+    const map = new Map();
+    const add = (c, s) => { if (!map.has(c)) map.set(c, []); if (s != null && !map.get(c).includes(s)) map.get(c).push(s); };
+    (SETTINGS.order || []).forEach(o => { add(o.cat); (o.subs || []).forEach(s => add(o.cat, s)); });
+    PRODUCTS.forEach(p => add(p.cat, p.sub));
+    let out = [...map].map(([cat, subs]) => ({ cat, subs }));
+    if (!withEmpty) out = out.map(o => ({ cat: o.cat, subs: o.subs.filter(s => PRODUCTS.some(p => p.cat === o.cat && p.sub === s)) })).filter(o => o.subs.length);
+    return out;
+  }
+
+  // ===== 분류 관리 창 =====
+  let subPick = null;
+  function openCats() {
+    subPick = null;
+    let m = $("catModal");
+    if (!m) { m = document.createElement("div"); m.id = "catModal"; m.className = "modal-backdrop"; m.dataset.admin = ""; document.body.appendChild(m); }
+    m.classList.add("open"); renderCats();
+  }
+  function renderCats() {
+    const st = structure(true), n = (c, s) => PRODUCTS.filter(p => p.cat === c && (s == null || p.sub === s)).length;
+    const btn = (k, c, s, t) => `<button data-k="${k}" data-c="${esc(c)}" data-s="${esc(s ?? "")}">${t}</button>`;
+    let h = `<div class="modal-header"><h2>🗂 분류 관리</h2><button class="close-btn" data-k="close">×</button></div>
+      <p class="guide-text" style="text-align:left">대분류 = 위쪽 탭, 소분류 = 목록 제목이에요. ▲▼로 순서를 바꾸고 ✏️로 이름을 고쳐요. 품목 자체를 옮길 때는 상품 카드의 ↕ 이동을 쓰세요.</p>`;
+    if (subPick) h += `<div class="cm-pick"><b>「${esc(subPick.sub)}」</b>을(를) 어느 대분류로 옮길까요?` +
+      st.filter(o => o.cat !== subPick.cat).map(o => `<button class="slot" style="margin:6px 0 0" data-k="subTo" data-c="${esc(o.cat)}">${esc(o.cat)}</button>`).join("") +
+      `<button class="slot" style="margin:6px 0 0;border-color:#999;color:#666;background:#fff" data-k="pickCancel">취소</button></div>`;
+    st.forEach(o => {
+      h += `<div class="cm-cat"><span class="cm-name">${esc(o.cat)} <small>(${n(o.cat)}개)</small></span><span class="cm-btns">${btn("catUp", o.cat, "", "▲")}${btn("catDown", o.cat, "", "▼")}${btn("catIcon", o.cat, "", (catIcon(o.cat) || "＋") + " 아이콘")}${btn("catFlat", o.cat, "", isFlat(o.cat) ? "소분류: 안 씀" : "소분류: 사용")}${btn("catRen", o.cat, "", "✏️")}${btn("catDel", o.cat, "", "🗑")}${btn("subAdd", o.cat, "", "＋소분류")}</span></div>`;
+      if (isFlat(o.cat)) h += `<div class="ci-note" style="margin:4px 0 0 4px">손님 화면에서는 소분류 제목 없이 상품이 바로 나와요. (아래 소분류는 보관만 돼요)</div>`;
+      o.subs.forEach(s => { h += `<div class="cm-sub"><span class="cm-name">${esc(s)} <small>(${n(o.cat, s)}개)</small></span><span class="cm-btns">${btn("subUp", o.cat, s, "▲")}${btn("subDown", o.cat, s, "▼")}${btn("subRen", o.cat, s, "✏️")}${btn("subMove", o.cat, s, "↪ 대분류 이동")}${btn("subDel", o.cat, s, "🗑")}</span></div>`; });
+    });
+    h += `<button class="btn-copy-only" style="margin-top:14px" data-k="newCat">＋ 대분류 추가</button>`;
+    $("catModal").innerHTML = `<div class="modal">${h}</div>`;
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("#catModal [data-k]"); if (!b) return;
+    const k = b.dataset.k, c = b.dataset.c, s = b.dataset.s;
+    if (k === "close") { $("catModal").classList.remove("open"); return; }
+    if (k === "pickCancel") { subPick = null; return renderCats(); }
+    if (k === "subMove") { subPick = { cat: c, sub: s }; return renderCats(); }
+    const st = structure(true), ci = st.findIndex(o => o.cat === c), o = st[ci];
+    const swap = (arr, i, d) => { const j = i + d; if (i >= 0 && j >= 0 && j < arr.length) [arr[i], arr[j]] = [arr[j], arr[i]]; };
+    if (k === "catUp" || k === "catDown") swap(st, ci, k === "catUp" ? -1 : 1);
+    else if (k === "subUp" || k === "subDown") swap(o.subs, o.subs.indexOf(s), k === "subUp" ? -1 : 1);
+    else if (k === "newCat") {
+      const nn = (prompt("새 대분류 이름") || "").trim(); if (!nn) return;
+      if (st.some(x => x.cat === nn)) return alert("이미 있는 이름이에요.");
+      st.push({ cat: nn, subs: [] });
+    } else if (k === "subAdd") {
+      const nn = (prompt(`「${c}」에 만들 소분류 이름`) || "").trim(); if (!nn) return;
+      if (!o.subs.includes(nn)) o.subs.push(nn);
+    } else if (k === "catIcon") {
+      const v = prompt(`「${c}」 앞에 붙일 아이콘 1개를 입력하세요.\n(예: 🥤 🍦 🍜 / 비우면 아이콘 없음)`, catIcon(c));
+      if (v === null) return;
+      const ic = Array.from(v.trim()).slice(0, 8).join(""), map = { ...(SETTINGS.catIcons || {}) };
+      if (ic) map[c] = ic; else delete map[c];
+      SETTINGS = { ...SETTINGS, catIcons: map };
+    } else if (k === "catFlat") {
+      const f = new Set(SETTINGS.flatCats || []); f.has(c) ? f.delete(c) : f.add(c);
+      SETTINGS = { ...SETTINGS, flatCats: [...f] };
+    } else if (k === "catRen") {
+      const nn = (prompt("대분류 새 이름", c) || "").trim(); if (!nn || nn === c) return;
+      const j = st.findIndex(x => x.cat === nn);
+      if (j >= 0 && !confirm(`「${nn}」은(는) 이미 있어요. 두 대분류를 합칠까요?`)) return;
+      PRODUCTS.forEach(p => { if (p.cat === c) p.cat = nn; });
+      SETTINGS = { ...SETTINGS, flatCats: (SETTINGS.flatCats || []).map(x => x === c ? nn : x) };
+      if ((SETTINGS.catIcons || {})[c] && !(SETTINGS.catIcons || {})[nn]) { const mp = { ...SETTINGS.catIcons }; mp[nn] = mp[c]; delete mp[c]; SETTINGS = { ...SETTINGS, catIcons: mp }; }
+      if (j >= 0) { st[j].subs = [...new Set([...st[j].subs, ...o.subs])]; st.splice(ci, 1); } else o.cat = nn;
+    } else if (k === "subRen") {
+      const nn = (prompt("소분류 새 이름", s) || "").trim(); if (!nn || nn === s) return;
+      if (o.subs.includes(nn) && !confirm(`「${nn}」은(는) 이미 있어요. 합칠까요?`)) return;
+      PRODUCTS.forEach(p => { if (p.cat === c && p.sub === s) p.sub = nn; });
+      if (o.subs.includes(nn)) o.subs.splice(o.subs.indexOf(s), 1); else o.subs[o.subs.indexOf(s)] = nn;
+    } else if (k === "catDel" || k === "subDel") {
+      const sub = k === "subDel" ? s : null, cnt = PRODUCTS.filter(p => p.cat === c && (sub == null || p.sub === sub)).length;
+      if (!confirm(`「${sub ?? c}」${cnt ? ` 안의 품목 ${cnt}개도 함께 삭제됩니다.` : ""} 삭제할까요?`)) return;
+      PRODUCTS = PRODUCTS.filter(p => !(p.cat === c && (sub == null || p.sub === sub)));
+      if (sub == null) st.splice(ci, 1); else o.subs.splice(o.subs.indexOf(s), 1);
+    } else if (k === "subTo") {
+      const from = subPick.cat, sub = subPick.sub, t = st.find(x => x.cat === c), f = st.find(x => x.cat === from);
+      PRODUCTS.forEach(p => { if (p.cat === from && p.sub === sub) p.cat = c; });
+      f.subs.splice(f.subs.indexOf(sub), 1);
+      if (!t.subs.includes(sub)) t.subs.push(sub);
+      subPick = null;
+    } else return;
+    SETTINGS = { ...SETTINGS, order: st };
+    Object.keys(cart).forEach(id => { if (!findP(id)) delete cart[id]; });
+    saveProducts(); renderCats();
+  });
+
+  // ===== 서버(구글 Apps Script) 연동 =====
+  let svStatus = "", svTimer = null, serverEmpty = false;
+  function applyServer(d) { PRODUCTS = d.products; Object.keys(cart).forEach(id => { if (!findP(id)) delete cart[id]; }); SETTINGS = { ...DEFAULT_SETTINGS, ...(d.settings || {}), minOrder: Math.max(MIN_ORDER_AMOUNT, Number(d.settings?.minOrder) || 0) }; refresh(); }
+  async function loadServer() {
+    if (!API_URL) return "off";
+    try { const c = JSON.parse(localStorage.getItem(SV_KEY) || "null"); if (c && c.u === API_URL && c.products) applyServer(c); } catch (e) {}
+    try {
+      const d = await (await fetch(API_URL + (API_URL.includes("?") ? "&" : "?") + "v=" + Date.now())).json();
+      if (d && d.products) { applyServer(d); serverEmpty = false; try { localStorage.setItem(SV_KEY, JSON.stringify({ u: API_URL, ...d })); } catch (e) {} return "ok"; }
+      serverEmpty = true; return "empty";
+    } catch (e) { return "fail"; }
+  }
+  function pushServer() {
+    svStatus = "☁️ 서버에 저장 중…"; if (isAdmin) showAdminBar();
+    clearTimeout(svTimer);
+    svTimer = setTimeout(async () => {
+      try {
+        const r = await fetch(API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ pin: adminPin, products: PRODUCTS, settings: SETTINGS }) });
+        const d = await r.json();
+        svStatus = d.ok ? "✅ 서버에 저장됨 — 손님 화면에 바로 반영돼요" : "⚠️ 저장 실패: " + (d.error || "알 수 없는 오류");
+        if (d.ok) { serverEmpty = false; try { localStorage.setItem(SV_KEY, JSON.stringify({ u: API_URL, products: PRODUCTS, settings: SETTINGS })); } catch (e) {} }
+      } catch (e) { svStatus = "⚠️ 서버 연결 실패 — 주소와 배포 설정을 확인하세요"; }
+      if (isAdmin) showAdminBar();
+    }, 600);
+  }
+
+  // ===== 배달/입금/서버 설정 =====
+  function openSettings() {
+    let m = $("setModal");
+    if (!m) { m = document.createElement("div"); m.id = "setModal"; m.className = "modal-backdrop"; m.dataset.admin = ""; document.body.appendChild(m); }
+    const S = SETTINGS, f = (id, label, val, ph, num) => `<div class="field-group"><label>${label}</label><input id="${id}" ${num ? 'type="number" inputmode="numeric"' : ""} value="${esc(val)}" placeholder="${ph || ""}"></div>`;
+    m.innerHTML = `<div class="modal"><div class="modal-header"><h2>⚙ 배달 · 입금 · 서버 설정</h2><button class="close-btn" data-s="close">×</button></div>
+      <p class="guide-text" style="text-align:left;margin-bottom:10px">금액 칸은 0이면 사용하지 않아요.</p>
+      ${f("sMin", "최소 주문금액 (원) · 20,000원 이상", Math.max(MIN_ORDER_AMOUNT, Number(S.minOrder) || 0), "최소 20000원", 1)}
+      ${f("sFee", "배달비 (원) — 0이면 '배달비 별도'로 안내", S.deliveryFee || 0, "", 1)}
+      ${f("sFree", "배달비 무료 기준금액 (원)", S.freeOver || 0, "", 1)}
+      ${f("sBank", "입금 은행", S.bank, "예: 농협")}
+      ${f("sAcct", "계좌번호", S.account, "예: 123-4567-8901-23")}
+      ${f("sHolder", "예금주", S.holder, "")}
+      ${f("sApi", "서버 주소 (Apps Script 웹앱 URL)", API_URL, "https://script.google.com/macros/s/…/exec")}
+      <button class="btn-kakao" style="background:var(--primary);color:#fff" data-s="save">저장</button></div>`;
+    m.classList.add("open");
+  }
+  document.addEventListener("click", async e => {
+    const b = e.target.closest("#setModal [data-s]"); if (!b) return;
+    const m = $("setModal");
+    if (b.dataset.s === "close") return m.classList.remove("open");
+    const n = id => parseInt($(id).value) || 0, v = id => $(id).value.trim();
+    SETTINGS = { ...SETTINGS, minOrder: Math.max(MIN_ORDER_AMOUNT, n("sMin")), deliveryFee: n("sFee"), freeOver: n("sFree"), bank: v("sBank"), account: v("sAcct"), holder: v("sHolder") };
+    const url = v("sApi");
+    m.classList.remove("open");
+    if (url !== API_URL) {
+      API_URL = url;
+      try { url ? localStorage.setItem("sevenApiUrl", url) : localStorage.removeItem("sevenApiUrl"); } catch (err) {}
+      if (url) {
+        const st = await loadServer();
+        if (st === "empty") { saveProducts(); alert("서버가 비어 있어 현재 품목과 설정을 올렸어요."); }
+        else if (st === "ok") alert("서버에 저장돼 있던 품목과 설정을 불러왔어요.");
+        else alert("서버에 연결하지 못했어요. 주소와 배포 설정(액세스: 모든 사용자)을 확인하세요.");
+        showAdminBar(); return;
+      }
+    }
+    saveProducts();
+  });
+
+  // ===== 장바구니 자동 저장 (손님 폰에 12시간 보관) =====
+  const CART_KEY = "sevenCart", LAST_KEY = "sevenLastOrder";
+  const kstDay = () => new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); // 한국시간 날짜 (밤 12시에 바뀜)
+  let cartDay = kstDay();
+  let cartReady = false, cartSig = "";
+  const cartSnapshot = () => ({ cart, pensionSel, pensionOther, pension: $("pensionInput").value, phone: $("memoInput").value, tobacco: $("tobaccoInput").value });
+  function saveCart() {
+    const snap = cartSnapshot(), sig = JSON.stringify(snap);
+    if (sig === cartSig) return;           // 실제로 바뀐 때만 저장 → 보관 시간은 '마지막 변경' 기준
+    cartSig = sig;
+    try {
+      if (!getCartSummary().cnt && !snap.pension && !snap.phone && !snap.tobacco && !snap.pensionSel && !snap.pensionOther) localStorage.removeItem(CART_KEY);
+      else localStorage.setItem(CART_KEY, JSON.stringify({ day: kstDay(), t: Date.now(), ...snap }));
+    } catch (e) {}
+  }
+  function loadCart() {
+    try {
+      const d = JSON.parse(localStorage.getItem(CART_KEY) || "null");
+      if (!d) return;
+      if (d.day !== kstDay()) { localStorage.removeItem(CART_KEY); return; }
+      Object.entries(d.cart || {}).forEach(([id, m]) => {
+        if (!API_URL && !findP(id)) return; // 서버 미사용 시 없어진 상품은 제외 (서버 사용 시는 서버 로딩 후 정리)
+        Object.entries(m || {}).forEach(([o, q]) => { q = Math.floor(toNumber(q)); if (q > 0) setQty(id, o, q); });
+      });
+      pensionSel = d.pensionSel || ""; pensionOther = !!d.pensionOther; $("pensionInput").value = d.pension || ""; $("memoInput").value = d.phone || ""; $("tobaccoInput").value = d.tobacco || "";
+      cartSig = JSON.stringify(cartSnapshot());
+    } catch (e) {}
+  }
+  ["pensionInput", "memoInput", "tobaccoInput"].forEach(id => $(id).addEventListener("input", saveCart));
+
+  // ===== 주문 완료: 상품만 비우고 펜션/호수/연락처는 유지 =====
+  function completeOrder() {
+    const lines = cartLines(), { cnt, sum } = getCartSummary(), text = buildOrderText();
+    try { localStorage.setItem(LAST_KEY, JSON.stringify({ day: kstDay(), t: Date.now(), cnt, sum, items: lines.map(l => ({ id: l.p.id, o: l.o, q: l.q })), text })); } catch (e) {}
+    Object.keys(cart).forEach(k => delete cart[k]);
+    $("tobaccoInput").value = "";               // 담배 요청은 주문마다 새로 적도록 비움
+    $("orderModal").classList.remove("open");
+    refresh();                                   // 비운 상태가 바로 저장됨
+  }
+  function getLastOrder() {
+    try {
+      const d = JSON.parse(localStorage.getItem(LAST_KEY) || "null");
+      if (!d) return null;
+      if (d.day !== kstDay()) { localStorage.removeItem(LAST_KEY); return null; }
+      return d;
+    } catch (e) { return null; }
+  }
+  function lastOrderHtml(lo) {
+    const names = lo.items.map(i => { const p = findP(i.id); return p ? `${esc(p.name)}${i.o ? " [" + esc(i.o) + "]" : ""} ×${i.q}` : null; }).filter(Boolean);
+    const t = new Date(lo.t), hm = t.toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" });
+    return `<div class="lo-card"><div class="lo-title">🧾 방금 보낸 주문<small>${hm} · ${lo.cnt}개 · ${formatWon(lo.sum)}</small></div>
+      <div class="lo-items">${names.slice(0, 3).join("<br>")}${names.length > 3 ? `<br>외 ${names.length - 3}종` : ""}</div>
+      <div class="lo-actions"><button type="button" class="main" data-ca="reorder">같은 상품 다시 담기</button><button type="button" data-ca="recopy">주문서 다시 복사</button></div></div>`;
+  }
+  // 밤 12시(한국시간)가 지나면 장바구니·펜션·입력칸을 전부 초기화 (앱을 켜 둔 채 넘어가도 적용)
+  function checkNewDay() {
+    if (cartDay === kstDay()) return;
+    cartDay = kstDay();
+    Object.keys(cart).forEach(k => delete cart[k]);
+    pensionSel = ""; pensionOther = false;
+    ["pensionInput", "memoInput", "tobaccoInput"].forEach(id => { $(id).value = ""; });
+    try { localStorage.removeItem(LAST_KEY); } catch (e) {}
+    cartSig = "";
+    $("cartModal").classList.remove("open"); $("orderModal").classList.remove("open");
+    refresh();
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkNewDay(); });
+  window.addEventListener("focus", checkNewDay);
+  window.addEventListener("pageshow", checkNewDay);
+  setInterval(checkNewDay, 60000);
+
+  // ===== 펜션 선택 (손님) =====
+  function feeRows(sum) {
+    const fee = feeOf(sum), need = pensionList().length && !pensionSel && !pensionOther;
+    if (fee === null) return `<div><span>배달비</span><span>${need ? "펜션 선택 후 계산" : "확인 후 안내"}</span></div>`;
+    return `<div><span>배달비${pensionSel ? " · " + esc(pensionSel) : ""}</span><span>${fee ? formatWon(fee) : "무료"}</span></div><div class="big"><span>최종 금액</span><span>${formatWon(sum + fee)}</span></div>`;
+  }
+  function renderPensionUI() {
+    const has = pensionList().length > 0;
+    if (pensionSel && !pensionList().some(x => x.n === pensionSel)) pensionSel = "";
+    $("pensionPickGroup").style.display = has ? "" : "none";
+    $("pensionLabel").textContent = has && !pensionOther ? "객실 호수 / 상세 위치 (필수)" : "펜션명 / 객실호수 (필수)";
+    $("pensionInput").placeholder = has && !pensionOther ? "예: 201호" : "예: OO펜션 201호";
+    const f = pensionList().find(x => x.n === pensionSel);
+    $("pensionPickBtn").innerHTML = pensionSel ? `<b>${esc(pensionSel)}</b><span class="pk-fee">${f && f.f != null ? (f.f ? formatWon(f.f) : "무료 배달") : "배달비 확인 후 안내"}</span>`
+      : pensionOther ? `<b>목록에 없음 (직접 입력)</b><span class="pk-fee">변경 ▾</span>` : `<span>펜션을 선택해 주세요</span><span class="pk-fee">선택 ▾</span>`;
+    const { rawSum, discount, sum } = getCartSummary();
+    $("orderSum").innerHTML = (discount ? `<div><span>정가 합계</span><span>${formatWon(rawSum)}</span></div><div><span>교차할인</span><span class="ci-disc">-${formatWon(discount)}</span></div>` : "") + `<div><span>상품 합계</span><span>${formatWon(sum)}</span></div>` + feeRows(sum);
+  }
+  function openPensionPicker() { $("pensionSearch").value = ""; renderPensionList(); $("pensionModal").classList.add("open"); }
+  function renderPensionList() {
+    const q = $("pensionSearch").value.trim().toLowerCase();
+    $("pensionList").innerHTML = pensionList().filter(x => !q || x.n.toLowerCase().includes(q)).map(x =>
+      `<button type="button" class="pk-row" data-pk="${esc(x.n)}"><span>${esc(x.n)}</span><span class="pk-fee">${x.f != null ? (x.f ? formatWon(x.f) : "무료") : "확인 후 안내"}</span></button>`).join("")
+      + `<button type="button" class="pk-row pk-other" data-pkother="1"><span>목록에 없어요 (직접 입력)</span><span class="pk-fee">확인 후 안내</span></button>`;
+  }
+  $("pensionSearch").addEventListener("input", renderPensionList);
+  $("pensionPickBtn").addEventListener("click", openPensionPicker);
+  $("pensionClose").addEventListener("click", () => $("pensionModal").classList.remove("open"));
+  $("pensionModal").addEventListener("click", e => { if (e.target === $("pensionModal")) $("pensionModal").classList.remove("open"); });
+  $("pensionList").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.pkother) { pensionSel = ""; pensionOther = true; } else { pensionSel = b.dataset.pk; pensionOther = false; }
+    $("pensionModal").classList.remove("open");
+    refresh(); refreshPreview();
+    if ($("cartModal").classList.contains("open")) renderCart();
+  });
+
+  // ===== 펜션별 배달비 관리 (관리자) =====
+  function parsePensions(t) {
+    const seen = new Map();
+    t.split("\n").map(s => s.trim()).filter(Boolean).forEach(line => {
+      let n = line, f = null; const m = line.match(/^(.+?)[\s,:\t]+(무료|[\d,]+)\s*원?$/);
+      if (m) { const v = m[2] === "무료" ? 0 : parseInt(m[2].replace(/,/g, ""), 10); if (m[2] === "무료" || v === 0 || v >= 100) { n = m[1].trim(); f = v; } }
+      seen.set(n, { n, f });
+    });
+    return [...seen.values()];
+  }
+  function openPensions() {
+    let m = $("penAdm");
+    if (!m) { m = document.createElement("div"); m.id = "penAdm"; m.className = "modal-backdrop"; m.dataset.admin = ""; document.body.appendChild(m); }
+    m.innerHTML = `<div class="modal"><div class="modal-header"><h2>🏨 펜션별 배달비</h2><button class="close-btn" data-p="close">×</button></div>
+      <p class="guide-text" style="text-align:left;margin-bottom:8px">한 줄에 펜션 하나씩 <b>이름 + 배달비</b>를 적어 주세요. 배달비를 비워 두면 "확인 후 안내", <b>0</b> 또는 <b>무료</b>는 무료 배달이에요. 목록이 비어 있으면 기존 공통 배달비(⚙ 설정)를 써요.<br>예)<br>행복펜션 3000<br>바다뷰펜션 4,000원<br>산속펜션 (배달비 비움)</p>
+      <textarea class="pen-area" id="penText">${esc(pensionList().map(x => x.n + (x.f != null ? "  " + x.f : "")).join("\n"))}</textarea>
+      <button class="btn-kakao" style="background:var(--primary);color:#fff;margin-top:10px" data-p="save">저장</button></div>`;
+    m.classList.add("open");
+  }
+  document.addEventListener("click", e => {
+    const b = e.target.closest("#penAdm [data-p]"); if (!b) return;
+    if (b.dataset.p === "close") return $("penAdm").classList.remove("open");
+    const list = parsePensions($("penText").value);
+    SETTINGS = { ...SETTINGS, pensions: list };
+    $("penAdm").classList.remove("open");
+    saveProducts();
+    alert(`펜션 ${list.length}곳 저장 (배달비 미입력 ${list.filter(x => x.f == null).length}곳)`);
+  });
+
+  // ===== 장바구니 창 =====
+  function cartLines() {
+    const out = [], bStates = getBundleStates();
+    Object.entries(cart).forEach(([id, m]) => {
+      const p = findP(id); if (!p) return;
+      Object.entries(m).forEach(([o, q]) => {
+        q = Math.max(0, Math.floor(toNumber(q)));
+        if (!q) return;
+        const lp = getLinePricing(p, o, bStates);
+        out.push({ p, o, q, u: lp.unit, rawUnit: lp.rawUnit, discounted: lp.discounted, bundle: lp.bundle });
+      });
+    });
+    return out;
+  }
+  function renderCart() {
+    const lines = cartLines(), { cnt, sum } = getCartSummary();
+    if (!lines.length) {
+      const lo = getLastOrder();
+      $("cartBody").innerHTML = `<div class="ci-empty">🛒<br>장바구니가 비어 있어요.<br><small>마음에 드는 상품을 담아 보세요!</small></div>` + (lo ? lastOrderHtml(lo) : "");
+      $("cartFoot").innerHTML = `<button class="ci-go" data-ca="close" type="button">상품 보러 가기</button>`;
+      return;
+    }
+    const { rawSum, discount, bStates } = getCartSummary();
+    const minOrder = Math.max(MIN_ORDER_AMOUNT, toNumber(SETTINGS.minOrder)), below = sum < minOrder;
+    $("cartBody").innerHTML = renderBundleBanner(bStates) + `<div class="ci-sum-top">총 <b>${cnt}개</b> · ${lines.length}종</div>` + lines.map(l => `
+      <div class="ci-row">
+        <div>
+          <div class="ci-name">${esc(l.p.name)}</div>
+          ${l.o ? `<span class="ci-opt">${esc(l.o)}${esc(addTxt((optsOf(l.p).find(x => x.n === l.o) || {}).a))}</span>` : ""}
+          <div class="ci-unit">${l.discounted ? `<span class="price-strike">${formatWon(l.rawUnit)}</span><span class="price-sale">${formatWon(l.u)}</span> / 개 · ${l.bundle.req}캔할인` : `${formatWon(l.u)} / 개`}</div>
+        </div>
+        <button class="ci-del" type="button" data-ca="del" data-id="${esc(l.p.id)}" data-o="${esc(l.o)}">✕ 삭제</button>
+        <div class="ci-line2">
+          <div class="qty-box">
+            <button class="qty-btn" type="button" data-ca="qty" data-d="-1" data-id="${esc(l.p.id)}" data-o="${esc(l.o)}" ${l.q <= 1 ? "disabled" : ""}>-</button>
+            <span class="qty-num">${l.q}</span>
+            <button class="qty-btn plus" type="button" data-ca="qty" data-d="1" data-id="${esc(l.p.id)}" data-o="${esc(l.o)}">+</button>
+          </div>
+          <div class="ci-total">${l.discounted ? `<span class="price-strike">${formatWon(l.rawUnit * l.q)}</span>` : ""}${formatWon(l.u * l.q)}</div>
+        </div>
+      </div>`).join("");
+    $("cartFoot").innerHTML = `
+      <div class="ci-min" style="color:${below ? "var(--accent)" : "var(--primary-dark)"}">${below ? `최소 주문금액(담배 제외)까지 ${formatWon(minOrder - sum)} 남았어요` : "✅ 최소 주문금액을 채웠어요"}</div>
+      <div class="ci-bar ${below ? "" : "ok"}"><i style="width:${Math.min(100, Math.round(sum / minOrder * 100))}%"></i></div>
+      <div class="ci-calc">
+        ${pensionList().length ? `<div><span>배달지</span><button class="pk-mini" type="button" data-ca="pension">${pensionSel ? esc(pensionSel) : pensionOther ? "직접 입력" : "펜션 선택 ▾"}</button></div>` : ""}
+        ${discount ? `<div><span>정가 합계</span><span>${formatWon(rawSum)}</span></div><div><span>교차할인</span><span class="ci-disc">-${formatWon(discount)}</span></div>` : ""}
+        <div><span>상품 합계</span><span>${formatWon(sum)}</span></div>
+        ${feeRows(sum)}
+      </div>
+      <div class="ci-actions">
+        <button class="btn-copy-only" type="button" data-ca="clear">전체 비우기</button>
+        <button class="ci-go" type="button" data-ca="order" ${below ? "disabled" : ""}>주문서 작성하기</button>
+      </div>
+      <div class="ci-note">상품 가격은 담는 시점이 아니라 항상 현재 가격으로 계산돼요.</div>`;
+  }
+  const openCart = () => { renderCart(); $("cartModal").classList.add("open"); };
+  const closeCart = () => $("cartModal").classList.remove("open");
+  $("openCartBtn").addEventListener("click", openCart);
+  $("cartClose").addEventListener("click", closeCart);
+  $("cartModal").addEventListener("click", e => {
+    if (e.target === $("cartModal")) return closeCart();           // 바깥(어두운 곳) 터치
+    const b = e.target.closest("[data-ca]"); if (!b) return;
+    const a = b.dataset.ca, id = b.dataset.id, o = b.dataset.o || "";
+    if (a === "close") return closeCart();
+    if (a === "pension") return openPensionPicker();
+    if (a === "reorder") {
+      const lo = getLastOrder(); if (!lo) return renderCart();
+      lo.items.forEach(i => { if (findP(i.id)) setQty(i.id, i.o, i.q); });
+      refresh(); renderCart(); return;
+    }
+    if (a === "recopy") { const lo = getLastOrder(); if (lo) copyText(lo.text).then(() => alert("지난 주문서를 다시 복사했어요.")); return; }
+    if (a === "qty") setQty(id, o, ((cart[id] || {})[o] || 0) + Number(b.dataset.d));
+    else if (a === "del") setQty(id, o, 0);
+    else if (a === "clear") {
+      if (!confirm("장바구니의 상품을 모두 비울까요?")) return;
+      Object.keys(cart).forEach(k => delete cart[k]); $("tobaccoInput").value = "";
+    } else if (a === "order") { closeCart(); $("openOrderBtn").click(); return; }
+    refresh(); renderCart();
+  });
+
+  // 초기 렌더링
+  loadCart(); cartReady = true;
+  refresh();
+  loadServer();
+</script>
+
+
+</body></html>
